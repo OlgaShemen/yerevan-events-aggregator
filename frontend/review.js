@@ -1,5 +1,5 @@
 const REVIEW_API_BASE_URL =
-  window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost"
+  window.location.port === "5500"
     ? "http://127.0.0.1:8000"
     : `${window.location.origin}/api`;
 
