@@ -26,6 +26,7 @@ backend/logs/
 deploy/backend.env
 deploy/data/
 deploy/logs/
+deploy/nginx/.htpasswd
 
 # OS/editor noise
 .DS_Store

@@ -1,4 +1,17 @@
 services:
+  admin:
+    image: nginx:1.27-alpine
+    container_name: yerevan-admin
+    depends_on:
+      - review-api
+    volumes:
+      - ../frontend:/usr/share/nginx/html:ro
+      - ./nginx/admin.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./nginx/.htpasswd:/etc/nginx/.htpasswd:ro
+    ports:
+      - "8087:80"
+    restart: unless-stopped
+
   review-api:
     build:
       context: ../backend
