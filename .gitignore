@@ -1,0 +1,38 @@
+# Python
+.venv/
+backend/.venv/
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# Local secrets and environment files
+.env
+.env.*
+!.env.example
+backend/.env
+backend/.env.*
+!backend/.env.example
+frontend/config.js
+
+# Telegram local auth/session files
+*.session
+*.session-journal
+
+# Logs and local runtime output
+*.log
+logs/
+backend/logs/
+
+# OS/editor noise
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/
+
+# Node/package manager caches, if added later
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
