@@ -1,14 +1,15 @@
 from datetime import UTC, date, datetime
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
+import os
 import sys
 from urllib.parse import parse_qs, urlparse
 
 from app.db import get_supabase_client
 
 
-HOST = "127.0.0.1"
-PORT = 8000
+HOST = os.getenv("REVIEW_API_HOST", "127.0.0.1")
+PORT = int(os.getenv("REVIEW_API_PORT", "8000"))
 
 ALLOWED_UPDATE_FIELDS = {
     "title",

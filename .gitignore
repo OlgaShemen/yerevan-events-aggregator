@@ -23,6 +23,9 @@ frontend/config.js
 *.log
 logs/
 backend/logs/
+deploy/backend.env
+deploy/data/
+deploy/logs/
 
 # OS/editor noise
 .DS_Store

@@ -1,0 +1,28 @@
+services:
+  review-api:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    container_name: yerevan-review-api
+    env_file:
+      - ./backend.env
+    environment:
+      REVIEW_API_HOST: 0.0.0.0
+      REVIEW_API_PORT: 8000
+    volumes:
+      - ./data/telegram:/data/telegram
+    ports:
+      - "127.0.0.1:8000:8000"
+    restart: unless-stopped
+
+  pipeline:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    env_file:
+      - ./backend.env
+    volumes:
+      - ./data/telegram:/data/telegram
+    command: ["python", "run_pipeline.py", "--process-limit", "60"]
+    profiles:
+      - manual
