@@ -194,7 +194,8 @@ create index if not exists idx_processing_logs_created
   on processing_logs (created_at);
 
 -- Public view for the future frontend.
-create or replace view public_events as
+create or replace view public_events
+with (security_invoker = true) as
 select
   e.id,
   e.title,
