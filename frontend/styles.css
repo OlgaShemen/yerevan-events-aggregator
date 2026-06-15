@@ -478,7 +478,9 @@ button:disabled {
   }
 
   .sticky-header {
+    position: static;
     padding-top: 18px;
+    backdrop-filter: none;
   }
 
   .filters,
