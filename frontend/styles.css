@@ -447,19 +447,19 @@ button:disabled {
   z-index: 20;
   width: 44px;
   height: 44px;
-  border: 0;
+  border: 0.5px solid rgba(255, 255, 255, 0.42);
   border-radius: 50%;
-  background: var(--ink);
+  background: rgba(82, 108, 168, 0.86);
   color: #fff;
   font-size: 22px;
   font-weight: 500;
   line-height: 1;
-  box-shadow: 0 12px 28px rgba(26, 26, 26, 0.18);
+  box-shadow: 0 10px 24px rgba(82, 108, 168, 0.2);
   cursor: pointer;
 }
 
 .scroll-top-button:hover {
-  background: var(--accent-strong);
+  background: rgba(82, 108, 168, 0.96);
 }
 
 .scroll-top-button[hidden] {
@@ -525,7 +525,7 @@ button:disabled {
 
   .scroll-top-button {
     right: 14px;
-    bottom: 14px;
+    bottom: 74px;
     width: 42px;
     height: 42px;
   }
