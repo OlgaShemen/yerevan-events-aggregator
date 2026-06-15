@@ -126,6 +126,7 @@ create table if not exists events (
   price_text text,
   source_url text,
   status event_status not null default 'draft',
+  category_checked boolean not null default false,
   confidence_score numeric(4, 3) not null default 0,
   normalized_key text,
   ai_payload jsonb not null default '{}'::jsonb,
@@ -176,6 +177,9 @@ create index if not exists idx_events_status_date
 
 create index if not exists idx_events_category
   on events (category);
+
+create index if not exists idx_events_status_category_checked
+  on events (status, category_checked);
 
 create index if not exists idx_events_language
   on events (language);

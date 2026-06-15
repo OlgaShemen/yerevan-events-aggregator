@@ -324,6 +324,30 @@ button:disabled {
   background: var(--bg);
 }
 
+.review-checkbox,
+.form-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.review-checkbox input,
+.form-checkbox input {
+  width: 16px;
+  min-height: auto;
+  height: 16px;
+  margin: 0;
+  accent-color: var(--accent);
+}
+
+.form-checkbox {
+  align-self: end;
+  min-height: 36px;
+}
+
 .tab-button {
   min-height: 30px;
   border-radius: 8px;

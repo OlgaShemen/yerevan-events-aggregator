@@ -7,6 +7,7 @@ const state = {
   events: [],
   status: "needs_review",
   search: "",
+  categoryUncheckedOnly: false,
 };
 
 const elements = {
@@ -16,6 +17,8 @@ const elements = {
   list: document.querySelector("#review-list"),
   reload: document.querySelector("#reload-button"),
   search: document.querySelector("#review-search-input"),
+  categoryUncheckedFilter: document.querySelector("#category-unchecked-filter"),
+  categoryUnchecked: document.querySelector("#category-unchecked-input"),
   tabs: document.querySelectorAll(".tab-button"),
 };
 
@@ -77,6 +80,7 @@ const TEXT = {
   noOriginal: "\u041e\u0440\u0438\u0433\u0438\u043d\u0430\u043b\u044c\u043d\u044b\u0439 \u0442\u0435\u043a\u0441\u0442 \u043d\u0435 \u043d\u0430\u0439\u0434\u0435\u043d.",
   possibleDuplicate: "\u0412\u043e\u0437\u043c\u043e\u0436\u043d\u044b\u0439 \u0434\u0443\u0431\u043b\u044c",
   duplicateHint: "\u041f\u043e\u0445\u043e\u0436\u0435\u0435 \u0441\u043e\u0431\u044b\u0442\u0438\u0435 \u0443\u0436\u0435 \u0435\u0441\u0442\u044c:",
+  categoryChecked: "\u041a\u0430\u0442\u0435\u0433\u043e\u0440\u0438\u044f \u043f\u0440\u043e\u0432\u0435\u0440\u0435\u043d\u0430",
 };
 
 const FIELD_LABELS = {
@@ -133,6 +137,18 @@ function renderField(name, value, type = "text") {
     <label>
       <span>${FIELD_LABELS[name]}</span>
       <input name="${name}" type="${type}" value="${escapeHtml(value)}" />
+    </label>
+  `;
+}
+
+function renderCategoryChecked(event) {
+  if (state.status !== "published") return "";
+
+  const checked = event.category_checked ? "checked" : "";
+  return `
+    <label class="form-checkbox">
+      <input name="category_checked" type="checkbox" ${checked} />
+      <span>${TEXT.categoryChecked}</span>
     </label>
   `;
 }
@@ -211,6 +227,8 @@ function renderReviewEvent(event) {
           <select name="category">${renderOptions(CATEGORIES, event.category || "other")}</select>
         </label>
 
+        ${renderCategoryChecked(event)}
+
         <label>
           <span>${FIELD_LABELS.language}</span>
           <select name="language">${renderOptions(LANGUAGES, event.language || "unknown")}</select>
@@ -257,6 +275,9 @@ async function loadReviewEvents() {
   if (state.search.trim()) {
     params.set("search", state.search.trim());
   }
+  if (state.status === "published" && state.categoryUncheckedOnly) {
+    params.set("category_unchecked", "1");
+  }
 
   try {
     const response = await fetch(`${REVIEW_API_BASE_URL}/review/events?${params.toString()}`);
@@ -285,6 +306,7 @@ function collectFormData(card) {
     "address",
     "price_text",
     "category",
+    "category_checked",
     "language",
     "description",
   ];
@@ -292,7 +314,8 @@ function collectFormData(card) {
 
   for (const field of fields) {
     const input = card.querySelector(`[name="${field}"]`);
-    payload[field] = input ? input.value.trim() : "";
+    if (!input) continue;
+    payload[field] = input.type === "checkbox" ? input.checked : input.value.trim();
   }
 
   return payload;
@@ -388,6 +411,11 @@ function renderEmptyStateIfNeeded() {
 
 function setActiveTab(status) {
   state.status = status;
+  elements.categoryUncheckedFilter.hidden = status !== "published";
+  if (status !== "published") {
+    state.categoryUncheckedOnly = false;
+    elements.categoryUnchecked.checked = false;
+  }
   elements.tabs.forEach((tab) => {
     tab.classList.toggle("is-active", tab.dataset.status === status);
   });
@@ -400,6 +428,11 @@ function bindReviewPage() {
     state.search = event.target.value;
     window.clearTimeout(elements.search._timer);
     elements.search._timer = window.setTimeout(loadReviewEvents, 250);
+  });
+
+  elements.categoryUnchecked.addEventListener("change", (event) => {
+    state.categoryUncheckedOnly = event.target.checked;
+    loadReviewEvents();
   });
 
   elements.tabs.forEach((tab) => {

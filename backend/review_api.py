@@ -24,12 +24,13 @@ ALLOWED_UPDATE_FIELDS = {
     "address",
     "price_text",
     "source_url",
+    "category_checked",
 }
 
 EVENT_SELECT_FIELDS = (
     "id,title,description,original_text,category,language,date_start,time_start,"
     "date_end,time_end,venue_name,address,price_text,status,confidence_score,source_url,"
-    "created_at,updated_at,ai_payload"
+    "category_checked,created_at,updated_at,ai_payload"
 )
 
 
@@ -134,6 +135,7 @@ class ReviewApiHandler(BaseHTTPRequestHandler):
         query = parse_qs(urlparse(self.path).query)
         status = (query.get("status") or ["needs_review"])[0]
         search = ((query.get("search") or [""])[0] or "").strip().lower()
+        category_unchecked_only = (query.get("category_unchecked") or [""])[0] == "1"
 
         if status not in {"needs_review", "published"}:
             self.send_json({"error": "Unsupported status."}, status=400)
@@ -157,6 +159,8 @@ class ReviewApiHandler(BaseHTTPRequestHandler):
                 .order("time_start")
                 .limit(300)
             )
+            if category_unchecked_only:
+                request = request.eq("category_checked", False)
         else:
             request = request.order("created_at")
 
