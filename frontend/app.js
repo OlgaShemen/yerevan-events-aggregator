@@ -174,7 +174,7 @@ function renderEventCard(event) {
       ? `${originalText.slice(0, ORIGINAL_TEXT_PREVIEW_LENGTH).trim()}...`
       : originalText;
   const sourceLink = event.source_url
-    ? `<a class="tag source-tag" href="${escapeHtml(event.source_url)}" target="_blank" rel="noreferrer">\u0421\u0441\u044b\u043b\u043a\u0430 \u043d\u0430 \u0438\u0441\u0442\u043e\u0447\u043d\u0438\u043a</a>`
+    ? `<a class="tag source-tag" href="${escapeHtml(event.source_url)}" target="_blank" rel="noreferrer">\u2197 \u0418\u0441\u0442\u043e\u0447\u043d\u0438\u043a</a>`
     : "";
 
   return `
