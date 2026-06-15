@@ -4,6 +4,7 @@ from datetime import UTC, datetime
 from app.category_normalization import normalize_category
 from app.date_validation import clear_inferred_weekday_dates
 from app.db import get_supabase_client
+from app.deduplication import duplicate_reason
 from app.event_extraction import extract_event_from_text
 from app.event_filtering import is_non_event_collection, should_ignore_extracted_event
 
@@ -78,7 +79,10 @@ def get_or_create_venue(supabase, event: dict) -> str | None:
     return created.data[0]["id"]
 
 
-def choose_event_status(event: dict) -> str:
+def choose_event_status(event: dict, duplicate_candidate: dict | None = None) -> str:
+    if duplicate_candidate:
+        return "needs_review"
+
     has_date = bool(event.get("date_start"))
     has_place = bool(event.get("venue_name") or event.get("address"))
     confidence = float(event.get("confidence_score") or 0)
@@ -87,6 +91,52 @@ def choose_event_status(event: dict) -> str:
         return "published"
 
     return "needs_review"
+
+
+def serialize_duplicate_candidate(candidate) -> dict:
+    duplicate = candidate.event_b
+    return {
+        "event_id": duplicate.get("id"),
+        "title": duplicate.get("title"),
+        "date_start": duplicate.get("date_start"),
+        "time_start": duplicate.get("time_start"),
+        "venue_name": duplicate.get("venue_name"),
+        "source_url": duplicate.get("source_url"),
+        "status": duplicate.get("status"),
+        "score": round(candidate.score, 3),
+        "title_similarity": round(candidate.title_similarity, 3),
+        "venue_similarity": round(candidate.venue_similarity, 3),
+        "reason": candidate.reason,
+    }
+
+
+def find_existing_duplicate(supabase, event: dict) -> dict | None:
+    date_start = event.get("date_start")
+    if not date_start:
+        return None
+
+    existing_events = (
+        supabase.table("events")
+        .select("id,title,date_start,time_start,venue_name,status,source_url")
+        .eq("date_start", date_start)
+        .in_("status", ["published", "needs_review"])
+        .limit(100)
+        .execute()
+        .data
+        or []
+    )
+
+    candidates = [
+        duplicate_reason(event, existing_event)
+        for existing_event in existing_events
+    ]
+    candidates = [candidate for candidate in candidates if candidate]
+
+    if not candidates:
+        return None
+
+    best_candidate = sorted(candidates, key=lambda candidate: candidate.score, reverse=True)[0]
+    return serialize_duplicate_candidate(best_candidate)
 
 
 def save_event(supabase, raw_item: dict, extracted_event: dict) -> dict:
@@ -101,8 +151,12 @@ def save_event(supabase, raw_item: dict, extracted_event: dict) -> dict:
         extracted_event,
         raw_item.get("raw_text"),
     )
+    duplicate_candidate = find_existing_duplicate(supabase, extracted_event)
+    if duplicate_candidate:
+        extracted_event["duplicate_candidate"] = duplicate_candidate
+
     venue_id = get_or_create_venue(supabase, extracted_event)
-    status = choose_event_status(extracted_event)
+    status = choose_event_status(extracted_event, duplicate_candidate)
 
     event_payload = {
         "title": extracted_event["title"],

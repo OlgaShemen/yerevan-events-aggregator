@@ -376,6 +376,23 @@ button:disabled {
   font-size: 13px;
 }
 
+.duplicate-warning {
+  display: grid;
+  gap: 4px;
+  padding: 12px;
+  color: #5d4d28;
+  background: #fff7df;
+  border: 1px solid #e4d29a;
+  border-radius: 8px;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.duplicate-warning a {
+  color: var(--accent-strong);
+  font-weight: 700;
+}
+
 .review-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(150px, 1fr));

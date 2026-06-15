@@ -75,6 +75,8 @@ const TEXT = {
   emptyPublished: "\u041d\u0435\u0442 \u043e\u043f\u0443\u0431\u043b\u0438\u043a\u043e\u0432\u0430\u043d\u043d\u044b\u0445 \u0441\u043e\u0431\u044b\u0442\u0438\u0439.",
   originalPost: "\u041e\u0440\u0438\u0433\u0438\u043d\u0430\u043b\u044c\u043d\u044b\u0439 Telegram-\u043f\u043e\u0441\u0442",
   noOriginal: "\u041e\u0440\u0438\u0433\u0438\u043d\u0430\u043b\u044c\u043d\u044b\u0439 \u0442\u0435\u043a\u0441\u0442 \u043d\u0435 \u043d\u0430\u0439\u0434\u0435\u043d.",
+  possibleDuplicate: "\u0412\u043e\u0437\u043c\u043e\u0436\u043d\u044b\u0439 \u0434\u0443\u0431\u043b\u044c",
+  duplicateHint: "\u041f\u043e\u0445\u043e\u0436\u0435\u0435 \u0441\u043e\u0431\u044b\u0442\u0438\u0435 \u0443\u0436\u0435 \u0435\u0441\u0442\u044c:",
 };
 
 const FIELD_LABELS = {
@@ -147,6 +149,34 @@ function renderActions() {
   `;
 }
 
+function formatDuplicateCandidate(candidate) {
+  const parts = [
+    candidate.title,
+    candidate.date_start,
+    candidate.time_start ? candidate.time_start.slice(0, 5) : "",
+    candidate.venue_name,
+  ].filter(Boolean);
+
+  return parts.join(" · ");
+}
+
+function renderDuplicateWarning(event) {
+  const candidate = event.ai_payload?.duplicate_candidate;
+  if (!candidate) return "";
+
+  const sourceLink = candidate.source_url
+    ? `<a href="${escapeHtml(candidate.source_url)}" target="_blank" rel="noreferrer">${TEXT.source}</a>`
+    : "";
+
+  return `
+    <div class="duplicate-warning">
+      <strong>${TEXT.possibleDuplicate}</strong>
+      <span>${TEXT.duplicateHint} ${escapeHtml(formatDuplicateCandidate(candidate))}</span>
+      ${sourceLink}
+    </div>
+  `;
+}
+
 function renderReviewEvent(event) {
   return `
     <article class="review-card" data-event-id="${escapeHtml(event.id)}">
@@ -163,6 +193,8 @@ function renderReviewEvent(event) {
         </div>
         <a class="tag source-tag" href="${escapeHtml(event.source_url || "#")}" target="_blank" rel="noreferrer">${TEXT.source}</a>
       </div>
+
+      ${renderDuplicateWarning(event)}
 
       <div class="review-grid">
         ${renderField("title", event.title)}

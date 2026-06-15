@@ -29,7 +29,7 @@ ALLOWED_UPDATE_FIELDS = {
 EVENT_SELECT_FIELDS = (
     "id,title,description,original_text,category,language,date_start,time_start,"
     "date_end,time_end,venue_name,address,price_text,status,confidence_score,source_url,"
-    "created_at,updated_at"
+    "created_at,updated_at,ai_payload"
 )
 
 
