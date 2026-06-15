@@ -440,6 +440,32 @@ button:disabled {
   background: #823238;
 }
 
+.scroll-top-button {
+  position: fixed;
+  right: 22px;
+  bottom: 22px;
+  z-index: 20;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--ink);
+  color: #fff;
+  font-size: 22px;
+  font-weight: 500;
+  line-height: 1;
+  box-shadow: 0 12px 28px rgba(26, 26, 26, 0.18);
+  cursor: pointer;
+}
+
+.scroll-top-button:hover {
+  background: var(--accent-strong);
+}
+
+.scroll-top-button[hidden] {
+  display: none;
+}
+
 @media (max-width: 860px) {
   .topbar {
     align-items: start;
@@ -495,5 +521,12 @@ button:disabled {
 
   .event-title {
     font-size: 20px;
+  }
+
+  .scroll-top-button {
+    right: 14px;
+    bottom: 14px;
+    width: 42px;
+    height: 42px;
   }
 }

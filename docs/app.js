@@ -21,6 +21,7 @@ const elements = {
   date: document.querySelector("#date-input"),
   category: document.querySelector("#category-input"),
   reset: document.querySelector("#reset-button"),
+  scrollTop: document.querySelector("#scroll-top-button"),
 };
 
 const DESCRIPTION_PREVIEW_LENGTH = 500;
@@ -304,5 +305,18 @@ function bindFilters() {
   });
 }
 
+function bindScrollTopButton() {
+  const toggleScrollTopButton = () => {
+    elements.scrollTop.hidden = window.scrollY < 500;
+  };
+
+  window.addEventListener("scroll", toggleScrollTopButton, { passive: true });
+  elements.scrollTop.addEventListener("click", () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+  toggleScrollTopButton();
+}
+
 bindFilters();
+bindScrollTopButton();
 loadEvents();
