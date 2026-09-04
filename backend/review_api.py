@@ -1,4 +1,4 @@
-from datetime import UTC, date, datetime
+from datetime import UTC, datetime
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
 import os
@@ -6,6 +6,7 @@ import sys
 from urllib.parse import parse_qs, urlparse
 
 from app.db import get_supabase_client
+from app.recurring_events import recurring_event_expired, yerevan_today
 
 
 HOST = os.getenv("REVIEW_API_HOST", "127.0.0.1")
@@ -30,7 +31,7 @@ ALLOWED_UPDATE_FIELDS = {
 EVENT_SELECT_FIELDS = (
     "id,title,description,original_text,category,language,date_start,time_start,"
     "date_end,time_end,venue_name,address,price_text,status,confidence_score,source_url,"
-    "category_checked,created_at,updated_at,ai_payload"
+    "category_checked,created_at,updated_at,ai_payload,recurring_schedule,display_until"
 )
 
 
@@ -57,7 +58,7 @@ def normalize_empty_values(payload: dict) -> dict:
 def get_event(supabase, event_id: str) -> dict:
     event = (
         supabase.table("events")
-        .select("id,title,status")
+        .select("id,title,status,date_start,date_end,recurring_schedule,display_until")
         .eq("id", event_id)
         .limit(1)
         .execute()
@@ -141,11 +142,12 @@ class ReviewApiHandler(BaseHTTPRequestHandler):
             self.send_json({"error": "Unsupported status."}, status=400)
             return
 
-        today = date.today().isoformat()
+        today = yerevan_today().isoformat()
         request = (
             self.supabase.table("events")
             .select(EVENT_SELECT_FIELDS)
             .eq("status", status)
+            .or_(f"display_until.is.null,display_until.gte.{today}")
         )
 
         if status == "needs_review":
@@ -154,7 +156,7 @@ class ReviewApiHandler(BaseHTTPRequestHandler):
         if status == "published":
             request = (
                 request
-                .or_(f"date_end.gte.{today},and(date_end.is.null,date_start.gte.{today})")
+                .or_(f"display_until.gte.{today},date_end.gte.{today},and(date_end.is.null,date_start.gte.{today})")
                 .order("date_start")
                 .order("time_start")
                 .limit(300)
@@ -199,6 +201,9 @@ class ReviewApiHandler(BaseHTTPRequestHandler):
             )
             return
 
+        if event.get("display_until") and (updates.get("date_start") or updates.get("date_end")):
+            updates["recurring_schedule"] = None
+            updates["display_until"] = None
         updates["updated_at"] = now_iso()
         updated = (
             self.supabase.table("events")
@@ -218,6 +223,8 @@ class ReviewApiHandler(BaseHTTPRequestHandler):
 
     def handle_publish_event(self, event_id: str) -> None:
         event = get_event(self.supabase, event_id)
+        if recurring_event_expired(event):
+            raise ValueError("Срок показа закончился. Для новой недели нужен свежий анонс.")
         updated = (
             self.supabase.table("events")
             .update({"status": "published", "updated_at": now_iso()})

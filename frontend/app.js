@@ -56,15 +56,20 @@ function formatTime(value) {
 }
 
 function getTodayISO() {
-  const today = new Date();
-  const year = today.getFullYear();
-  const month = String(today.getMonth() + 1).padStart(2, "0");
-  const day = String(today.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
+  const parts = new Intl.DateTimeFormat("en", {
+    timeZone: "Asia/Yerevan", year: "numeric", month: "2-digit", day: "2-digit",
+  }).formatToParts(new Date());
+  const values = Object.fromEntries(parts.map(({ type, value }) => [type, value]));
+  return `${values.year}-${values.month}-${values.day}`;
+}
+
+function isRecurringEvent(event) {
+  return Boolean(event.recurring_schedule && event.display_until && !event.date_start && !event.date_end);
 }
 
 function isUpcomingOrOngoing(event) {
   const today = getTodayISO();
+  if (event.display_until) return event.display_until >= today;
   const lastEventDate = event.date_end || event.date_start;
 
   if (!lastEventDate) return false;
@@ -73,10 +78,11 @@ function isUpcomingOrOngoing(event) {
 }
 
 function hasRequiredPublicFields(event) {
-  return Boolean(event.date_start && (event.venue_name || event.address));
+  return Boolean((event.date_start || isRecurringEvent(event)) && (event.venue_name || event.address));
 }
 
 function formatDateRange(event) {
+  if (isRecurringEvent(event)) return "На этой неделе";
   if (!event.date_start && !event.date_end) return "Date TBA";
 
   if (event.date_start && event.date_end && event.date_start !== event.date_end) {
@@ -87,6 +93,7 @@ function formatDateRange(event) {
 }
 
 function formatTimeRange(event) {
+  if (isRecurringEvent(event)) return "";
   if (event.time_start && event.time_end && event.time_start !== event.time_end) {
     return `${formatTime(event.time_start)} - ${formatTime(event.time_end)}`;
   }
@@ -96,6 +103,7 @@ function formatTimeRange(event) {
 
 function eventIncludesDate(event, selectedDate) {
   if (!selectedDate) return true;
+  if (isRecurringEvent(event)) return false;
 
   const startDate = event.date_start || event.date_end;
   const endDate = event.date_end || event.date_start;
@@ -185,6 +193,7 @@ function renderEventCard(event) {
       </div>
       <div>
         <h2 class="event-title">${escapeHtml(event.title)}</h2>
+        ${isRecurringEvent(event) ? `<p class="event-description">${escapeHtml(event.recurring_schedule)}</p>` : ""}
         ${
           hasDescription
             ? `
@@ -320,3 +329,15 @@ function bindScrollTopButton() {
 bindFilters();
 bindScrollTopButton();
 loadEvents();
+
+// Expire offers even when the page stays open across the Sunday/Monday boundary.
+let lastRenderedDay = getTodayISO();
+function refreshCalendarDay() {
+  const today = getTodayISO();
+  if (today !== lastRenderedDay) {
+    lastRenderedDay = today;
+    renderEvents();
+  }
+}
+setInterval(refreshCalendarDay, 60000);
+document.addEventListener("visibilitychange", refreshCalendarDay);

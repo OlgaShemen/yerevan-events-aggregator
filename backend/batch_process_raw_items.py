@@ -7,7 +7,7 @@ from process_raw_item_to_event import process_raw_item
 def get_raw_items(supabase, limit: int) -> list[dict]:
     response = (
         supabase.table("raw_items")
-        .select("id,source_id,source_url,raw_text,status")
+        .select("id,source_id,source_url,raw_text,raw_payload,status")
         .eq("status", "new")
         .order("collected_at")
         .limit(limit)

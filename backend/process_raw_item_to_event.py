@@ -7,6 +7,7 @@ from app.db import get_supabase_client
 from app.deduplication import duplicate_reason
 from app.event_extraction import extract_event_from_text
 from app.event_filtering import is_non_event_collection, should_ignore_extracted_event
+from app.recurring_events import prepare_recurring_event, recurring_event_expired
 
 
 PUBLISH_CONFIDENCE_THRESHOLD = 0.75
@@ -15,7 +16,7 @@ PUBLISH_CONFIDENCE_THRESHOLD = 0.75
 def get_next_raw_item(supabase) -> dict | None:
     response = (
         supabase.table("raw_items")
-        .select("id,source_id,source_url,raw_text,status")
+        .select("id,source_id,source_url,raw_text,raw_payload,status")
         .eq("status", "new")
         .order("collected_at")
         .limit(1)
@@ -83,7 +84,10 @@ def choose_event_status(event: dict, duplicate_candidate: dict | None = None) ->
     if duplicate_candidate:
         return "needs_review"
 
-    has_date = bool(event.get("date_start"))
+    has_date = bool(event.get("date_start")) or bool(
+        event.get("recurring_schedule") and event.get("display_until")
+        and not recurring_event_expired(event)
+    )
     has_place = bool(event.get("venue_name") or event.get("address"))
     confidence = float(event.get("confidence_score") or 0)
 
@@ -151,6 +155,17 @@ def save_event(supabase, raw_item: dict, extracted_event: dict) -> dict:
         extracted_event,
         raw_item.get("raw_text"),
     )
+    normalized_key = build_normalized_key(extracted_event)
+    if extracted_event.get("display_until"):
+        normalized_key = (
+            f"weekly:{extracted_event['display_until']}:{raw_item['source_id']}:{normalized_key}"
+        )
+        existing = (
+            supabase.table("events").select("*")
+            .eq("normalized_key", normalized_key).limit(1).execute().data
+        )
+        if existing:
+            return existing[0]
     duplicate_candidate = find_existing_duplicate(supabase, extracted_event)
     if duplicate_candidate:
         extracted_event["duplicate_candidate"] = duplicate_candidate
@@ -168,6 +183,8 @@ def save_event(supabase, raw_item: dict, extracted_event: dict) -> dict:
         "time_start": extracted_event.get("time_start"),
         "date_end": extracted_event.get("date_end"),
         "time_end": extracted_event.get("time_end"),
+        "recurring_schedule": extracted_event.get("recurring_schedule"),
+        "display_until": extracted_event.get("display_until"),
         "venue_id": venue_id,
         "venue_name": extracted_event.get("venue_name"),
         "address": extracted_event.get("address"),
@@ -175,11 +192,23 @@ def save_event(supabase, raw_item: dict, extracted_event: dict) -> dict:
         "source_url": extracted_event.get("source_url") or raw_item.get("source_url"),
         "status": status,
         "confidence_score": extracted_event.get("confidence_score") or 0,
-        "normalized_key": build_normalized_key(extracted_event),
+        "normalized_key": normalized_key,
         "ai_payload": extracted_event,
     }
 
-    created_event = supabase.table("events").insert(event_payload).execute().data[0]
+    try:
+        created_event = supabase.table("events").insert(event_payload).execute().data[0]
+    except Exception as error:
+        # The partial unique index also protects concurrent recurring imports.
+        if not extracted_event.get("display_until") or getattr(error, "code", None) != "23505":
+            raise
+        existing = (
+            supabase.table("events").select("*")
+            .eq("normalized_key", normalized_key).limit(1).execute().data
+        )
+        if not existing:
+            raise
+        return existing[0]
 
     supabase.table("event_sources").insert(
         {
@@ -272,15 +301,22 @@ def process_raw_item(supabase, raw_item: dict) -> dict:
     )
     extracted_events = get_usable_extracted_events(extraction_result)
     extracted_events = [
+        prepare_recurring_event(
+            clear_inferred_weekday_dates(event, raw_item.get("raw_text")), raw_item
+        )
+        for event in extracted_events
+    ]
+    extracted_events = [
         event
         for event in extracted_events
         if not should_ignore_extracted_event(event, raw_item.get("raw_text"))
+        and not recurring_event_expired(event)
     ]
 
     if not extraction_result.get("is_event", True) or not extracted_events:
         rejection_reason = extraction_result.get("rejection_reason")
         if not extracted_events:
-            rejection_reason = rejection_reason or "AI classified this as an event but did not return a title."
+            rejection_reason = rejection_reason or "No eligible events remain after extraction, filtering and expiry checks."
 
         update_raw_item_status(
             supabase,

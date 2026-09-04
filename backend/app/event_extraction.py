@@ -14,6 +14,7 @@ EVENT_ITEM_SCHEMA = {
         "time_start": {"type": ["string", "null"]},
         "date_end": {"type": ["string", "null"]},
         "time_end": {"type": ["string", "null"]},
+        "recurring_schedule": {"type": ["string", "null"]},
         "venue_name": {"type": ["string", "null"]},
         "address": {"type": ["string", "null"]},
         "category": {
@@ -46,6 +47,7 @@ EVENT_ITEM_SCHEMA = {
         "time_start",
         "date_end",
         "time_end",
+        "recurring_schedule",
         "venue_name",
         "address",
         "category",
@@ -103,7 +105,22 @@ def extract_event_from_text(raw_text: str, source_url: str | None = None) -> dic
                     "'Расписание занятий на эту неделю' means date_start=null unless each item has a concrete "
                     "calendar date such as '12 июня', '12.06', or 'June 12'. "
                     "Set is_event to false and return an empty events array if the text is not a real offline or online event announcement. "
+                    "For an offer with explicit recurring wording (daily, every Saturday, etc.) but no concrete calendar dates, "
+                    "keep date_start and date_end null and set recurring_schedule to an exact contiguous quote from this "
+                    "event's source text containing the recurrence wording AND all its time slots. Preserve line breaks. "
+                    "Keep one event for the same recurring activity with multiple daily groups, not one event per group or day. "
+                    "For example, daily SUP tours with 09:00-15:00 and 16:00-22:00 groups form one event. "
+                    "Plain missing dates, 'this week', 'summer', and a weekday alone do not establish recurrence. "
+                    "For those cases and for explicitly dated events, set recurring_schedule to null. "
+                    "Do not borrow recurrence wording from another event in a digest. "
                     "If is_event is false, explain why in rejection_reason. "
+                    "Exclude commercial promotions, promotional contests, giveaways, prize draws, referral campaigns, "
+                    "cashback offers, and gifts conditional on purchases, money transfers, subscriptions, likes, "
+                    "or reposts. These are advertising offers, not events, even if they have a deadline or a draw date. "
+                    "For example, 'KWIKPAY promotion: Apple gifts for transfers to Armenia' is not an event. "
+                    "In a mixed digest, omit only promotional offers and keep genuine events. "
+                    "Keep actual cultural, creative, and sports competitions, quizzes, tournaments, and charity events; "
+                    "prizes, sponsors, or the word 'contest' alone do not make an event a promotional giveaway. "
                     "If one post contains a schedule, digest, weekly program, or several separate announcements, "
                     "extract each separate event as a separate item in the events array. "
                     "For schedules, digests, and weekly programs, do not create a generic summary event "

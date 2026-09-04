@@ -107,6 +107,7 @@ function escapeHtml(value) {
 }
 
 function formatDateTime(event) {
+  if (event.recurring_schedule && event.display_until) return `На этой неделе · показ до ${event.display_until}`;
   const date = event.date_start || TEXT.noDate;
   const time = event.time_start || TEXT.noTime;
   return `${date} ${time}`;
@@ -211,6 +212,9 @@ function renderReviewEvent(event) {
       </div>
 
       ${renderDuplicateWarning(event)}
+      ${event.recurring_schedule && event.display_until ? `
+        <p class="event-description">${escapeHtml(event.recurring_schedule)}</p>
+      ` : ""}
 
       <div class="review-grid">
         ${renderField("title", event.title)}

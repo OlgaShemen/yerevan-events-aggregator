@@ -120,6 +120,8 @@ create table if not exists events (
   time_start time,
   date_end date,
   time_end time,
+  recurring_schedule text,
+  display_until date,
   venue_id uuid references venues(id) on delete set null,
   venue_name text,
   address text,
@@ -190,6 +192,9 @@ create index if not exists idx_events_venue_name
 create index if not exists idx_events_normalized_key
   on events (normalized_key);
 
+create unique index if not exists idx_events_recurring_key
+  on events (normalized_key) where display_until is not null;
+
 create index if not exists idx_processing_logs_created
   on processing_logs (created_at);
 
@@ -212,10 +217,13 @@ select
   e.price_text,
   e.source_url,
   e.confidence_score,
-  e.created_at
+  e.created_at,
+  e.recurring_schedule,
+  e.display_until
 from events e
 left join venues v on v.id = e.venue_id
-where e.status = 'published';
+where e.status = 'published'
+  and (e.display_until is null or e.display_until >= (now() at time zone 'Asia/Yerevan')::date);
 
 -- Simple helper to keep updated_at fresh.
 create or replace function set_updated_at()

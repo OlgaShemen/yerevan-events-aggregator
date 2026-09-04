@@ -21,7 +21,7 @@ def main() -> None:
     supabase = get_supabase_client()
     raw_items = (
         supabase.table("raw_items")
-        .select("id,source_id,source_url,raw_text,status")
+        .select("id,source_id,source_url,raw_text,raw_payload,status")
         .eq("source_url", args.source_url)
         .execute()
         .data

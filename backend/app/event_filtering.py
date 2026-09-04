@@ -23,6 +23,35 @@ COLLECTION_MARKERS = [
 ]
 
 
+PROMOTIONAL_TITLE_PATTERN = re.compile(
+    r"^\s*(?:\W)*(?:"
+    r"(?:рекламн\w*|промо)\s+(?:конкурс\w*|акци\w*|розыгрыш\w*)|"
+    r"розыгрыш\w*\s+(?:подарк\w*|приз\w*|билет\w*|iphone\w*|apple\b)|"
+    r"(?:giveaway|sweepstakes)\b|promotional\s+(?:contest|campaign)\b"
+    r")",
+    re.IGNORECASE,
+)
+TRANSACTION_REWARD_PATTERN = re.compile(
+    r"(?:подар\w*|приз\w*|выигра\w*|розыгрыш\w*|кешбэк\w*|кэшбэк\w*)"
+    r"[^.!?\n]{0,100}\bза\s+(?:денежн\w*\s+)?(?:перевод\w*|покупк\w*|репост\w*|подписк\w*)\b",
+    re.IGNORECASE,
+)
+
+
+def is_promotional_event(event: dict) -> bool:
+    # Inspect this event's text, not the whole digest shared by its siblings.
+    title = event.get("title") or ""
+    text = title + "\n" + (event.get("description") or "")
+    return bool(
+        PROMOTIONAL_TITLE_PATTERN.search(title)
+        or TRANSACTION_REWARD_PATTERN.search(title)
+        or (
+            re.match(r"^\s*акция\b", title, re.IGNORECASE)
+            and TRANSACTION_REWARD_PATTERN.search(text)
+        )
+    )
+
+
 def is_non_event_collection(raw_text: str | None) -> bool:
     if not raw_text:
         return False
@@ -34,6 +63,9 @@ def is_non_event_collection(raw_text: str | None) -> bool:
 
 
 def should_ignore_extracted_event(event: dict, raw_text: str | None) -> bool:
+    if is_promotional_event(event):
+        return True
+
     text = " ".join(
         value
         for value in [
