@@ -8,9 +8,8 @@ from app.deduplication import duplicate_reason
 from app.event_extraction import extract_event_from_text
 from app.event_filtering import is_non_event_collection, should_ignore_extracted_event
 from app.recurring_events import prepare_recurring_event, recurring_event_expired
+from app.review_reasons import build_review_reasons
 
-
-PUBLISH_CONFIDENCE_THRESHOLD = 0.75
 
 
 def get_next_raw_item(supabase) -> dict | None:
@@ -81,20 +80,8 @@ def get_or_create_venue(supabase, event: dict) -> str | None:
 
 
 def choose_event_status(event: dict, duplicate_candidate: dict | None = None) -> str:
-    if duplicate_candidate:
-        return "needs_review"
-
-    has_date = bool(event.get("date_start")) or bool(
-        event.get("recurring_schedule") and event.get("display_until")
-        and not recurring_event_expired(event)
-    )
-    has_place = bool(event.get("venue_name") or event.get("address"))
-    confidence = float(event.get("confidence_score") or 0)
-
-    if has_date and has_place and confidence >= PUBLISH_CONFIDENCE_THRESHOLD:
-        return "published"
-
-    return "needs_review"
+    reasons = build_review_reasons(event, duplicate_candidate)
+    return "needs_review" if reasons else "published"
 
 
 def serialize_duplicate_candidate(candidate) -> dict:

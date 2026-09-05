@@ -15,6 +15,9 @@ class RecurringEventTests(unittest.TestCase):
         self.clock = patch("app.recurring_events.yerevan_today", return_value=date(2026, 9, 4))
         self.clock.start()
         self.addCleanup(self.clock.stop)
+        self.review_clock = patch("app.review_reasons.yerevan_today", return_value=date(2026, 9, 4))
+        self.review_clock.start()
+        self.addCleanup(self.review_clock.stop)
         self.event = {
             "title": "SUP-тур", "recurring_schedule": SCHEDULE,
             "date_start": None, "date_end": None,

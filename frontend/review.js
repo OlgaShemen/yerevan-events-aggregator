@@ -7,6 +7,7 @@ const state = {
   events: [],
   status: "needs_review",
   search: "",
+  reviewReason: "",
   categoryUncheckedOnly: false,
 };
 
@@ -17,6 +18,8 @@ const elements = {
   list: document.querySelector("#review-list"),
   reload: document.querySelector("#reload-button"),
   search: document.querySelector("#review-search-input"),
+  reviewReasonFilter: document.querySelector("#review-reason-filter"),
+  reviewReason: document.querySelector("#review-reason-select"),
   categoryUncheckedFilter: document.querySelector("#category-unchecked-filter"),
   categoryUnchecked: document.querySelector("#category-unchecked-input"),
   tabs: document.querySelectorAll(".tab-button"),
@@ -58,6 +61,13 @@ const LANGUAGE_LABELS = {
   en: "\u0410\u043d\u0433\u043b\u0438\u0439\u0441\u043a\u0438\u0439",
   mixed: "\u0421\u043c\u0435\u0448\u0430\u043d\u043d\u044b\u0439",
   unknown: "\u041d\u0435 \u0443\u043a\u0430\u0437\u0430\u043d",
+};
+
+const REVIEW_REASON_LABELS = {
+  missing_date: "Нет даты",
+  missing_place: "Нет места",
+  low_confidence: "Низкая уверенность AI",
+  possible_duplicate: "Возможный дубль",
 };
 
 const TEXT = {
@@ -196,6 +206,17 @@ function renderDuplicateWarning(event) {
   `;
 }
 
+function renderReviewReasons(event) {
+  if (event.status !== "needs_review" || !event.review_reasons?.length) return "";
+  return `
+    <div class="review-reasons" aria-label="Причины проверки">
+      ${event.review_reasons
+        .map((reason) => `<span class="review-reason">${escapeHtml(REVIEW_REASON_LABELS[reason] || reason)}</span>`)
+        .join("")}
+    </div>
+  `;
+}
+
 function renderReviewEvent(event) {
   return `
     <article class="review-card" data-event-id="${escapeHtml(event.id)}">
@@ -213,6 +234,7 @@ function renderReviewEvent(event) {
         <a class="tag source-tag" href="${escapeHtml(event.source_url || "#")}" target="_blank" rel="noreferrer">${TEXT.source}</a>
       </div>
 
+      ${renderReviewReasons(event)}
       ${renderDuplicateWarning(event)}
       ${event.recurring_schedule && event.display_until ? `
         <p class="event-description">${escapeHtml(event.recurring_schedule)}</p>
@@ -280,6 +302,9 @@ async function loadReviewEvents() {
   const params = new URLSearchParams({ status: state.status });
   if (state.search.trim()) {
     params.set("search", state.search.trim());
+  }
+  if (state.status === "needs_review" && state.reviewReason) {
+    params.set("reason", state.reviewReason);
   }
   if (state.status === "published" && state.categoryUncheckedOnly) {
     params.set("category_unchecked", "1");
@@ -418,9 +443,14 @@ function renderEmptyStateIfNeeded() {
 function setActiveTab(status) {
   state.status = status;
   elements.categoryUncheckedFilter.hidden = status !== "published";
+  elements.reviewReasonFilter.hidden = status !== "needs_review";
   if (status !== "published") {
     state.categoryUncheckedOnly = false;
     elements.categoryUnchecked.checked = false;
+  }
+  if (status !== "needs_review") {
+    state.reviewReason = "";
+    elements.reviewReason.value = "";
   }
   elements.tabs.forEach((tab) => {
     tab.classList.toggle("is-active", tab.dataset.status === status);
@@ -438,6 +468,11 @@ function bindReviewPage() {
 
   elements.categoryUnchecked.addEventListener("change", (event) => {
     state.categoryUncheckedOnly = event.target.checked;
+    loadReviewEvents();
+  });
+
+  elements.reviewReason.addEventListener("change", (event) => {
+    state.reviewReason = event.target.value;
     loadReviewEvents();
   });
 

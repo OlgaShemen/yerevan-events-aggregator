@@ -7,6 +7,7 @@ from urllib.parse import parse_qs, urlparse
 
 from app.db import get_supabase_client
 from app.recurring_events import recurring_event_expired, yerevan_today
+from app.review_reasons import REVIEW_REASON_LABELS, build_review_reasons
 
 
 HOST = os.getenv("REVIEW_API_HOST", "127.0.0.1")
@@ -137,6 +138,7 @@ class ReviewApiHandler(BaseHTTPRequestHandler):
         status = (query.get("status") or ["needs_review"])[0]
         search = ((query.get("search") or [""])[0] or "").strip().lower()
         category_unchecked_only = (query.get("category_unchecked") or [""])[0] == "1"
+        review_reason = ((query.get("reason") or [""])[0] or "").strip()
 
         if status not in {"needs_review", "published"}:
             self.send_json({"error": "Unsupported status."}, status=400)
@@ -167,6 +169,16 @@ class ReviewApiHandler(BaseHTTPRequestHandler):
             request = request.order("created_at")
 
         events = request.execute().data or []
+        for event in events:
+            event["review_reasons"] = build_review_reasons(event)
+
+        if review_reason:
+            if review_reason not in REVIEW_REASON_LABELS:
+                self.send_json({"error": "Unsupported review reason."}, status=400)
+                return
+            events = [
+                event for event in events if review_reason in event["review_reasons"]
+            ]
 
         if search:
             events = [
