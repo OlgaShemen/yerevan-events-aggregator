@@ -54,6 +54,17 @@ class VenueResolutionTests(unittest.TestCase):
         self.assertEqual(resolved["address"], "Туманяна, 35Г")
         self.assertEqual(resolved["venue_resolution"], "trusted_directory")
 
+    def test_resolves_vair_i_with_literal_dot(self):
+        event = {"venue_name": None, "address": None}
+        resolved = resolve_known_venue(event, "Лекция пройдёт в пространстве vair.i")
+        self.assertEqual(resolved["venue_name"], "vair.i")
+        self.assertEqual(resolved["address"], "Баграмян 9/59")
+
+    def test_does_not_resolve_similar_vair_i_text_without_dot(self):
+        event = {"venue_name": None, "address": None}
+        resolved = resolve_known_venue(event, "Лекция пройдёт в пространстве vair-i")
+        self.assertIsNone(resolved["venue_name"])
+
 
 if __name__ == "__main__":
     unittest.main()

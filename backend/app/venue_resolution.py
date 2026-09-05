@@ -38,6 +38,12 @@ KNOWN_VENUES = (
         venue_alias=re.compile(r"\bletters\s+and\s+numbers\b|\bLAN\b", re.IGNORECASE),
         shared_context=re.compile(r"\bletters\s+and\s+numbers\b|\bLAN\b", re.IGNORECASE),
     ),
+    KnownVenue(
+        name="vair.i",
+        address="Баграмян 9/59",
+        venue_alias=re.compile(r"\bvair\.i\b", re.IGNORECASE),
+        shared_context=re.compile(r"\bvair\.i\b", re.IGNORECASE),
+    ),
 )
 
 
