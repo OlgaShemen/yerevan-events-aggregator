@@ -46,6 +46,33 @@ select {
   backdrop-filter: blur(8px);
 }
 
+.test-notice {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 20px;
+  margin: 0 0 18px;
+  padding: 10px 12px;
+  border: 0.5px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  color: #555555;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.test-notice a {
+  flex: none;
+  color: var(--accent-strong);
+  font-weight: 500;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.test-notice a:hover {
+  color: var(--accent);
+}
+
 .topbar {
   display: flex;
   align-items: flex-end;
@@ -507,6 +534,12 @@ button:disabled {
     position: static;
     padding-top: 18px;
     backdrop-filter: none;
+  }
+
+  .test-notice {
+    align-items: flex-start;
+    flex-direction: column;
+    margin-bottom: 16px;
   }
 
   .filters,
