@@ -298,6 +298,7 @@ def process_raw_item(supabase, raw_item: dict) -> dict:
     extraction_result = extract_event_from_text(
         raw_text=raw_item["raw_text"],
         source_url=raw_item.get("source_url"),
+        published_at=(raw_item.get("raw_payload") or {}).get("telegram_date"),
     )
     extracted_events = get_usable_extracted_events(extraction_result)
     extracted_events = [

@@ -1,7 +1,8 @@
 import json
-from datetime import date
+from datetime import datetime
 
 from app.config import get_settings
+from app.date_validation import YEREVAN_TIMEZONE, telegram_publication_date
 from app.openai_client import get_openai_client
 
 
@@ -79,10 +80,24 @@ EXTRACTION_SCHEMA = {
 }
 
 
-def extract_event_from_text(raw_text: str, source_url: str | None = None) -> dict:
+def extract_event_from_text(
+    raw_text: str,
+    source_url: str | None = None,
+    published_at: str | None = None,
+) -> dict:
     settings = get_settings()
     client = get_openai_client()
-    current_date = date.today().isoformat()
+    current_date = datetime.now(YEREVAN_TIMEZONE).date().isoformat()
+    source_date = telegram_publication_date(published_at)
+    source_date_instruction = (
+        f"The Telegram source post was published on {source_date} in Asia/Yerevan. "
+        "Use that publication date only to resolve an explicit relative date such as today, tomorrow, "
+        "the day after tomorrow, this Sunday, or next Sunday, and to infer the year of an explicit "
+        "month-and-day date. Never use the publication date as the event date when the announcement "
+        "contains no explicit calendar or relative date. "
+        if source_date
+        else "The Telegram source publication date is unavailable. Do not calculate relative dates. "
+    )
 
     response = client.responses.create(
         model=settings.openai_model,
@@ -93,15 +108,17 @@ def extract_event_from_text(raw_text: str, source_url: str | None = None) -> dic
                     "You classify and extract event information from raw announcements in Yerevan. "
                     "Return only fields that match the provided JSON schema. "
                     f"The current date is {current_date}. "
-                    "Use this current date to infer the year when the announcement gives dates without a year. "
-                    "If a date without a year has already passed in the current year, use the next year only when "
-                    "the text clearly describes an upcoming event. "
+                    + source_date_instruction
+                    + "If the source publication date is unavailable, use the current date to infer the year "
+                    "only for an explicit month-and-day date. "
                     "Do not convert weekdays into calendar dates. If the text says only Monday, Tuesday, "
                     "this week, every Tuesday, or similar recurring weekday wording without a concrete calendar date, "
                     "set date_start and date_end to null. "
                     "Never calculate dates from phrases like 'this week', 'next week', 'Monday', 'Tuesday', "
                     "'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday', 'Понедельник', 'Вторник', "
                     "'Среда', 'Четверг', 'Пятница', 'Суббота', or 'Воскресенье'. "
+                    "The only exception is when the same event explicitly says today, tomorrow, the day after "
+                    "tomorrow, this weekday, or next weekday and a source publication date is available. "
                     "Examples: 'Понедельник: 11:00 Yoga' means date_start=null and time_start=11:00. "
                     "'Расписание занятий на эту неделю' means date_start=null unless each item has a concrete "
                     "calendar date such as '12 июня', '12.06', or 'June 12'. "

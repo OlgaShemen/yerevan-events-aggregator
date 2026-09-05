@@ -7,7 +7,7 @@ from app.event_extraction import extract_event_from_text
 def get_next_raw_item(supabase) -> dict | None:
     response = (
         supabase.table("raw_items")
-        .select("id,source_id,source_url,raw_text,status")
+        .select("id,source_id,source_url,raw_text,raw_payload,status")
         .eq("status", "new")
         .order("collected_at")
         .limit(1)
@@ -45,6 +45,7 @@ def main() -> None:
         extracted_event = extract_event_from_text(
             raw_text=raw_item["raw_text"],
             source_url=raw_item.get("source_url"),
+            published_at=(raw_item.get("raw_payload") or {}).get("telegram_date"),
         )
     except Exception as error:
         write_log(
