@@ -4,6 +4,7 @@ import sys
 
 from app.db import get_supabase_client
 from app.deduplication import find_duplicate_candidates
+from app.review_cleanup import archive_stale_undated_review_events
 from app.telegram_ingestion import ingest_telegram_posts
 from batch_process_raw_items import get_raw_items
 from process_raw_item_to_event import process_raw_item
@@ -102,8 +103,12 @@ def main() -> None:
         f"failed:{processing_result['failed']}"
     )
 
+    print("Step 3: Stale review cleanup")
+    archived = archive_stale_undated_review_events(get_supabase_client())
+    print(f"archived_stale_undated_review_events={archived}")
+
     if not args.skip_dedup_check:
-        print("Step 3: Duplicate candidate check")
+        print("Step 4: Duplicate candidate check")
         check_duplicates()
 
     print("Pipeline finished.")
