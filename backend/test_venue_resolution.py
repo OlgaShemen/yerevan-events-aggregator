@@ -38,6 +38,22 @@ class VenueResolutionTests(unittest.TestCase):
         self.assertEqual(resolved["address"], "Уточните у организатора")
         self.assertEqual(resolved["venue_resolution"], "trusted_directory")
 
+    def test_resolves_letters_and_numbers_from_full_name(self):
+        event = {"venue_name": None, "address": None}
+        resolved = resolve_known_venue(
+            event,
+            "Встречаемся в пространстве Letters and Numbers",
+        )
+        self.assertEqual(resolved["venue_name"], "Letters and Numbers")
+        self.assertEqual(resolved["address"], "Туманяна, 35Г")
+
+    def test_fills_letters_and_numbers_address_for_lan_alias(self):
+        event = {"venue_name": "LAN", "address": None}
+        resolved = resolve_known_venue(event, "")
+        self.assertEqual(resolved["venue_name"], "LAN")
+        self.assertEqual(resolved["address"], "Туманяна, 35Г")
+        self.assertEqual(resolved["venue_resolution"], "trusted_directory")
+
 
 if __name__ == "__main__":
     unittest.main()

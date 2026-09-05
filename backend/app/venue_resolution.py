@@ -32,6 +32,12 @@ KNOWN_VENUES = (
         venue_alias=re.compile(r"\bереван\s+глазами\s+инженера\b", re.IGNORECASE),
         shared_context=re.compile(r"\bереван\s+глазами\s+инженера\b", re.IGNORECASE),
     ),
+    KnownVenue(
+        name="Letters and Numbers",
+        address="Туманяна, 35Г",
+        venue_alias=re.compile(r"\bletters\s+and\s+numbers\b|\bLAN\b", re.IGNORECASE),
+        shared_context=re.compile(r"\bletters\s+and\s+numbers\b|\bLAN\b", re.IGNORECASE),
+    ),
 )
 
 
