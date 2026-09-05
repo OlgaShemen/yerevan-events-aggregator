@@ -47,6 +47,7 @@ begin
       'concert',
       'theatre',
       'exhibition',
+      'lecture',
       'party',
       'movie',
       'workshop',

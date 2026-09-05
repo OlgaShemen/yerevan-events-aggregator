@@ -23,6 +23,7 @@ EVENT_ITEM_SCHEMA = {
                 "concert",
                 "theatre",
                 "exhibition",
+                "lecture",
                 "party",
                 "movie",
                 "workshop",
@@ -113,6 +114,8 @@ def extract_event_from_text(raw_text: str, source_url: str | None = None) -> dic
                     "Plain missing dates, 'this week', 'summer', and a weekday alone do not establish recurrence. "
                     "For those cases and for explicitly dated events, set recurring_schedule to null. "
                     "Do not borrow recurrence wording from another event in a digest. "
+                    "Use category lecture for lectures, lecture series, public talks, and educational talks. "
+                    "Do not use lecture for workshops, discussions after a film, theatre performances, or quizzes. "
                     "If is_event is false, explain why in rejection_reason. "
                     "Exclude commercial promotions, promotional contests, giveaways, prize draws, referral campaigns, "
                     "cashback offers, and gifts conditional on purchases, money transfers, subscriptions, likes, "
