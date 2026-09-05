@@ -200,3 +200,36 @@ def find_duplicate_candidates(events: list[dict]) -> list[DuplicateCandidate]:
                 candidates.append(candidate)
 
     return sorted(candidates, key=lambda candidate: candidate.score, reverse=True)
+
+
+def select_review_duplicate(candidate: DuplicateCandidate) -> tuple[dict, dict] | None:
+    review_events = [
+        event
+        for event in (candidate.event_a, candidate.event_b)
+        if event.get("status") == "needs_review"
+    ]
+    if not review_events:
+        return None
+    if len(review_events) == 1:
+        target = review_events[0]
+    else:
+        target = max(review_events, key=lambda event: event.get("created_at") or "")
+    other = candidate.event_b if target is candidate.event_a else candidate.event_a
+    return target, other
+
+
+def serialize_duplicate_candidate(candidate: DuplicateCandidate, duplicate: dict | None = None) -> dict:
+    duplicate = duplicate or candidate.event_b
+    return {
+        "event_id": duplicate.get("id"),
+        "title": duplicate.get("title"),
+        "date_start": duplicate.get("date_start"),
+        "time_start": duplicate.get("time_start"),
+        "venue_name": duplicate.get("venue_name"),
+        "source_url": duplicate.get("source_url"),
+        "status": duplicate.get("status"),
+        "score": round(candidate.score, 3),
+        "title_similarity": round(candidate.title_similarity, 3),
+        "venue_similarity": round(candidate.venue_similarity, 3),
+        "reason": candidate.reason,
+    }

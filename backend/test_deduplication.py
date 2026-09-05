@@ -1,6 +1,6 @@
 import unittest
 
-from app.deduplication import duplicate_reason
+from app.deduplication import duplicate_reason, select_review_duplicate
 
 
 class DeduplicationTests(unittest.TestCase):
@@ -68,6 +68,34 @@ class DeduplicationTests(unittest.TestCase):
             "title": "Silent Disco Yerevan (розыгрыш билетов)",
         }
         self.assertIsNone(duplicate_reason(first, second))
+
+    def test_selects_newer_review_card_for_flagging(self):
+        first = {
+            "id": "old",
+            "title": "Органные сказки",
+            "date_start": "2026-09-12",
+            "status": "needs_review",
+            "created_at": "2026-09-01T10:00:00+00:00",
+        }
+        second = {
+            **first,
+            "id": "new",
+            "created_at": "2026-09-02T10:00:00+00:00",
+        }
+        candidate = duplicate_reason(first, second)
+        target, other = select_review_duplicate(candidate)
+        self.assertEqual(target["id"], "new")
+        self.assertEqual(other["id"], "old")
+
+    def test_does_not_flag_two_published_cards(self):
+        first = {
+            "title": "Органные сказки",
+            "date_start": "2026-09-12",
+            "status": "published",
+        }
+        second = dict(first)
+        candidate = duplicate_reason(first, second)
+        self.assertIsNone(select_review_duplicate(candidate))
 
 
 if __name__ == "__main__":

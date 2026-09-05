@@ -3,7 +3,11 @@ import asyncio
 import sys
 
 from app.db import get_supabase_client
-from app.deduplication import find_duplicate_candidates
+from app.deduplication import (
+    find_duplicate_candidates,
+    select_review_duplicate,
+    serialize_duplicate_candidate,
+)
 from app.review_cleanup import archive_stale_undated_review_events
 from app.telegram_ingestion import ingest_telegram_posts
 from batch_process_raw_items import get_raw_items
@@ -74,7 +78,7 @@ def check_duplicates() -> int:
         supabase.table("events")
         .select(
             "id,title,date_start,time_start,recurring_schedule,display_until,"
-            "venue_name,status,source_url"
+            "venue_name,status,source_url,created_at,ai_payload"
         )
         .in_("status", ["published", "needs_review"])
         .order("date_start")
@@ -84,6 +88,25 @@ def check_duplicates() -> int:
 
     candidates = find_duplicate_candidates(events or [])
     print(f"duplicate_candidates={len(candidates)}")
+    flagged = 0
+    for candidate in candidates:
+        selected = select_review_duplicate(candidate)
+        if not selected:
+            continue
+        target, duplicate = selected
+        ai_payload = dict(target.get("ai_payload") or {})
+        duplicate_payload = serialize_duplicate_candidate(candidate, duplicate)
+        if (ai_payload.get("duplicate_candidate") or {}).get("event_id") == duplicate.get("id"):
+            continue
+        ai_payload["duplicate_candidate"] = duplicate_payload
+        (
+            supabase.table("events")
+            .update({"ai_payload": ai_payload})
+            .eq("id", target["id"])
+            .execute()
+        )
+        flagged += 1
+    print(f"duplicate_review_flags={flagged}")
     return len(candidates)
 
 

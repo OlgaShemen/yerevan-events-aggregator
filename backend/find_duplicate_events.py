@@ -11,7 +11,10 @@ def main() -> None:
     supabase = get_supabase_client()
     events = (
         supabase.table("events")
-        .select("id,title,date_start,venue_name,status,source_url")
+        .select(
+            "id,title,date_start,time_start,recurring_schedule,display_until,"
+            "venue_name,status,source_url,created_at,ai_payload"
+        )
         .in_("status", ["published", "needs_review"])
         .order("date_start")
         .execute()

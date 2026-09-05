@@ -4,7 +4,7 @@ from datetime import UTC, datetime
 from app.category_normalization import normalize_category
 from app.date_validation import clear_inferred_weekday_dates
 from app.db import get_supabase_client
-from app.deduplication import duplicate_reason
+from app.deduplication import duplicate_reason, serialize_duplicate_candidate
 from app.event_extraction import extract_event_from_text
 from app.event_filtering import is_non_event_collection, should_ignore_extracted_event
 from app.recurring_events import prepare_recurring_event, recurring_event_expired
@@ -83,23 +83,6 @@ def get_or_create_venue(supabase, event: dict) -> str | None:
 def choose_event_status(event: dict, duplicate_candidate: dict | None = None) -> str:
     reasons = build_review_reasons(event, duplicate_candidate)
     return "needs_review" if reasons else "published"
-
-
-def serialize_duplicate_candidate(candidate) -> dict:
-    duplicate = candidate.event_b
-    return {
-        "event_id": duplicate.get("id"),
-        "title": duplicate.get("title"),
-        "date_start": duplicate.get("date_start"),
-        "time_start": duplicate.get("time_start"),
-        "venue_name": duplicate.get("venue_name"),
-        "source_url": duplicate.get("source_url"),
-        "status": duplicate.get("status"),
-        "score": round(candidate.score, 3),
-        "title_similarity": round(candidate.title_similarity, 3),
-        "venue_similarity": round(candidate.venue_similarity, 3),
-        "reason": candidate.reason,
-    }
 
 
 def find_existing_duplicate(supabase, event: dict) -> dict | None:
