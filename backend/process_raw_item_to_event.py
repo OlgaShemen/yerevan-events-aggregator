@@ -104,19 +104,23 @@ def serialize_duplicate_candidate(candidate) -> dict:
 
 def find_existing_duplicate(supabase, event: dict) -> dict | None:
     date_start = event.get("date_start")
-    if not date_start:
+    display_until = event.get("display_until")
+    if not date_start and not display_until:
         return None
 
-    existing_events = (
+    request = (
         supabase.table("events")
-        .select("id,title,date_start,time_start,venue_name,status,source_url")
-        .eq("date_start", date_start)
+        .select(
+            "id,title,date_start,time_start,recurring_schedule,display_until,"
+            "venue_name,status,source_url"
+        )
         .in_("status", ["published", "needs_review"])
-        .limit(100)
-        .execute()
-        .data
-        or []
     )
+    if date_start:
+        request = request.eq("date_start", date_start)
+    else:
+        request = request.is_("date_start", "null").eq("display_until", display_until)
+    existing_events = request.limit(100).execute().data or []
 
     candidates = [
         duplicate_reason(event, existing_event)

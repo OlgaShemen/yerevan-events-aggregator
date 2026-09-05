@@ -19,6 +19,13 @@ STOP_WORDS = {
     "вечер",
     "детей",
     "взрослых",
+    "розыгрыш",
+    "разыграем",
+    "билетов",
+    "билеты",
+    "финал",
+    "подарок",
+    "акция",
 }
 
 
@@ -105,10 +112,21 @@ def same_or_close_time(event_a: dict, event_b: dict) -> bool:
     return abs(time_a - time_b) <= TIME_THRESHOLD_MINUTES
 
 
-def same_date(event_a: dict, event_b: dict) -> bool:
+def same_event_period(event_a: dict, event_b: dict) -> bool:
     date_a = event_a.get("date_start")
     date_b = event_b.get("date_start")
-    return bool(date_a and date_b and date_a == date_b)
+    if date_a or date_b:
+        return bool(date_a and date_b and date_a == date_b)
+
+    display_until_a = event_a.get("display_until")
+    display_until_b = event_b.get("display_until")
+    return bool(
+        display_until_a
+        and display_until_b
+        and display_until_a == display_until_b
+        and event_a.get("recurring_schedule")
+        and event_b.get("recurring_schedule")
+    )
 
 
 def same_or_missing_venue(event_a: dict, event_b: dict) -> bool:
@@ -121,7 +139,7 @@ def same_or_missing_venue(event_a: dict, event_b: dict) -> bool:
 
 
 def duplicate_reason(event_a: dict, event_b: dict) -> DuplicateCandidate | None:
-    if not same_date(event_a, event_b):
+    if not same_event_period(event_a, event_b):
         return None
 
     if not same_or_close_time(event_a, event_b):
@@ -132,7 +150,7 @@ def duplicate_reason(event_a: dict, event_b: dict) -> DuplicateCandidate | None:
 
     venue_matches = same_or_missing_venue(event_a, event_b)
 
-    if title_score >= 0.9:
+    if title_score >= 0.9 and venue_matches:
         score = (title_score * 0.75) + (venue_score * 0.25)
         return DuplicateCandidate(
             event_a=event_a,
@@ -140,7 +158,7 @@ def duplicate_reason(event_a: dict, event_b: dict) -> DuplicateCandidate | None:
             title_similarity=title_score,
             venue_similarity=venue_score,
             score=score,
-            reason="same date and very similar title",
+            reason="same date or active week and very similar title",
         )
 
     if title_score >= TITLE_THRESHOLD and venue_matches:
@@ -151,7 +169,7 @@ def duplicate_reason(event_a: dict, event_b: dict) -> DuplicateCandidate | None:
             title_similarity=title_score,
             venue_similarity=venue_score,
             score=score,
-            reason="same date, similar title, same or missing venue",
+            reason="same date or active week, similar title, same or missing venue",
         )
 
     overlap_score = token_overlap(event_a.get("title"), event_b.get("title"))

@@ -11,6 +11,8 @@ class PromotionalEventFilteringTests(unittest.TestCase):
             "Рекламный конкурс магазина",
             "Giveaway: win an iPhone",
             "Подарок за покупку",
+            "Silent Disco Yerevan (розыгрыш билетов)",
+            "Финал розыгрыша",
         ]:
             with self.subTest(title=title):
                 self.assertTrue(should_ignore_extracted_event({"title": title}, None))
@@ -19,6 +21,12 @@ class PromotionalEventFilteringTests(unittest.TestCase):
         self.assertTrue(should_ignore_extracted_event({
             "title": "Акция KWIKPAY",
             "description": "Подарки Apple за переводы в Армению",
+        }, None))
+
+    def test_normal_event_title_with_giveaway_description_is_ignored(self):
+        self.assertTrue(should_ignore_extracted_event({
+            "title": 'Концерт "Menya zovut Masha"',
+            "description": "Розыгрыш 2 билетов для одного подписчика канала.",
         }, None))
 
     def test_real_events_with_prizes_are_kept(self):

@@ -24,11 +24,16 @@ COLLECTION_MARKERS = [
 
 
 PROMOTIONAL_TITLE_PATTERN = re.compile(
-    r"^\s*(?:\W)*(?:"
+    r"(?:^\s*(?:\W)*|[([]\s*)(?:"
     r"(?:рекламн\w*|промо)\s+(?:конкурс\w*|акци\w*|розыгрыш\w*)|"
-    r"розыгрыш\w*\s+(?:подарк\w*|приз\w*|билет\w*|iphone\w*|apple\b)|"
+    r"(?:финал\w*\s+)?розыгрыш\w*(?:\s+(?:подарк\w*|приз\w*|билет\w*|iphone\w*|apple\b))?|"
     r"(?:giveaway|sweepstakes)\b|promotional\s+(?:contest|campaign)\b"
     r")",
+    re.IGNORECASE,
+)
+PROMOTIONAL_DESCRIPTION_PATTERN = re.compile(
+    r"^\s*(?:\W)*(?:розыгрыш\w*|разыгра(?:ем|ю|ют|ываем)\b|"
+    r"финал\w*\s+розыгрыш\w*|giveaway\b|sweepstakes\b)",
     re.IGNORECASE,
 )
 TRANSACTION_REWARD_PATTERN = re.compile(
@@ -44,6 +49,7 @@ def is_promotional_event(event: dict) -> bool:
     text = title + "\n" + (event.get("description") or "")
     return bool(
         PROMOTIONAL_TITLE_PATTERN.search(title)
+        or PROMOTIONAL_DESCRIPTION_PATTERN.search(event.get("description") or "")
         or TRANSACTION_REWARD_PATTERN.search(title)
         or (
             re.match(r"^\s*акция\b", title, re.IGNORECASE)
