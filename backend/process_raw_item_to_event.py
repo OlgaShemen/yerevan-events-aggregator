@@ -9,6 +9,7 @@ from app.event_extraction import extract_event_from_text
 from app.event_filtering import is_non_event_collection, should_ignore_extracted_event
 from app.recurring_events import prepare_recurring_event, recurring_event_expired
 from app.review_reasons import build_review_reasons
+from app.venue_resolution import resolve_known_venue
 
 
 
@@ -142,6 +143,7 @@ def save_event(supabase, raw_item: dict, extracted_event: dict) -> dict:
         extracted_event,
         raw_item.get("raw_text"),
     )
+    extracted_event = resolve_known_venue(extracted_event, raw_item.get("raw_text"))
     normalized_key = build_normalized_key(extracted_event)
     if extracted_event.get("display_until"):
         normalized_key = (
