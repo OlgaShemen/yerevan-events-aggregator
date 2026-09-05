@@ -467,6 +467,114 @@ button:disabled {
   background: #823238;
 }
 
+.privacy-section {
+  margin-top: 36px;
+  padding: 24px;
+  border: 0.5px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  color: #555555;
+  line-height: 1.55;
+}
+
+.privacy-section h2,
+.cookie-banner h2 {
+  margin: 0 0 10px;
+  color: var(--text);
+  font-size: 20px;
+  font-weight: 500;
+}
+
+.privacy-section p,
+.cookie-banner p {
+  margin: 0 0 10px;
+}
+
+.privacy-section p:last-child,
+.cookie-banner p:last-child {
+  margin-bottom: 0;
+}
+
+.privacy-section a,
+.site-footer a,
+.cookie-banner a,
+.text-button {
+  color: var(--accent-strong);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.site-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 20px;
+  padding: 18px 0 0;
+  font-size: 13px;
+}
+
+.text-button {
+  min-height: auto;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  font-size: inherit;
+  font-weight: 400;
+}
+
+.text-button:hover {
+  background: transparent;
+  color: var(--accent);
+}
+
+.cookie-banner {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  left: 20px;
+  z-index: 40;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 20px;
+  align-items: center;
+  width: min(900px, calc(100% - 40px));
+  margin: 0 auto;
+  padding: 18px;
+  border: 0.5px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  box-shadow: 0 14px 40px rgba(26, 26, 26, 0.16);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.cookie-banner[hidden] {
+  display: none;
+}
+
+.cookie-banner__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.secondary-button {
+  border: 0.5px solid var(--line);
+  background: var(--surface);
+  color: var(--text);
+}
+
+.secondary-button:hover {
+  background: var(--bg);
+}
+
+.cookie-close-button {
+  width: 100%;
+  margin-top: 2px;
+}
+
 .scroll-top-button {
   position: fixed;
   right: 22px;
@@ -540,6 +648,25 @@ button:disabled {
     align-items: flex-start;
     flex-direction: column;
     margin-bottom: 16px;
+  }
+
+  .privacy-section {
+    padding: 18px;
+  }
+
+  .cookie-banner {
+    right: 10px;
+    bottom: 10px;
+    left: 10px;
+    grid-template-columns: 1fr;
+    width: calc(100% - 20px);
+    max-height: calc(100vh - 20px);
+    overflow-y: auto;
+  }
+
+  .cookie-banner__actions {
+    display: grid;
+    grid-template-columns: 1fr;
   }
 
   .filters,

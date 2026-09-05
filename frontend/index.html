@@ -4,17 +4,61 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Yerevan Events</title>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() { dataLayer.push(arguments); }
+
+      window.YEREVAN_EVENTS_ANALYTICS = {
+        measurementId: "G-W104N8LNSZ",
+        storageKey: "yerevan_events_analytics_consent",
+        consent: null,
+      };
+
+      try {
+        window.YEREVAN_EVENTS_ANALYTICS.consent = localStorage.getItem(
+          window.YEREVAN_EVENTS_ANALYTICS.storageKey
+        );
+      } catch (error) {
+        window.YEREVAN_EVENTS_ANALYTICS.consent = null;
+      }
+
+      gtag("consent", "default", {
+        analytics_storage: "denied",
+        ad_storage: "denied",
+        ad_user_data: "denied",
+        ad_personalization: "denied",
+        wait_for_update: 500,
+      });
+
+      if (window.YEREVAN_EVENTS_ANALYTICS.consent === "granted") {
+        gtag("consent", "update", {
+          analytics_storage: "granted",
+          ad_storage: "denied",
+          ad_user_data: "denied",
+          ad_personalization: "denied",
+        });
+      }
+
+      gtag("set", "ads_data_redaction", true);
+      gtag("js", new Date());
+      gtag("config", window.YEREVAN_EVENTS_ANALYTICS.measurementId, {
+        allow_google_signals: false,
+        allow_ad_personalization_signals: false,
+        send_page_view: window.YEREVAN_EVENTS_ANALYTICS.consent === "granted",
+      });
+    </script>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-W104N8LNSZ"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="./styles.css?v=20260905-feedback" />
+    <link rel="stylesheet" href="./styles.css?v=20260905-ga4" />
   </head>
   <body>
     <main class="app-shell">
       <div class="sticky-header">
         <aside class="test-notice" aria-label="&#1054;&#1073;&#1088;&#1072;&#1090;&#1085;&#1072;&#1103; &#1089;&#1074;&#1103;&#1079;&#1100;">
           <span>&#1057;&#1072;&#1081;&#1090; &#1088;&#1072;&#1073;&#1086;&#1090;&#1072;&#1077;&#1090; &#1074; &#1090;&#1077;&#1089;&#1090;&#1086;&#1074;&#1086;&#1084; &#1088;&#1077;&#1078;&#1080;&#1084;&#1077;. &#1053;&#1072;&#1096;&#1083;&#1080; &#1086;&#1096;&#1080;&#1073;&#1082;&#1091; &#1080;&#1083;&#1080; &#1093;&#1086;&#1090;&#1080;&#1090;&#1077; &#1087;&#1088;&#1077;&#1076;&#1083;&#1086;&#1078;&#1080;&#1090;&#1100; &#1091;&#1083;&#1091;&#1095;&#1096;&#1077;&#1085;&#1080;&#1077;?</span>
-          <a href="https://t.me/OlgaSheNum" target="_blank" rel="noreferrer">&#1053;&#1072;&#1087;&#1080;&#1096;&#1080;&#1090;&#1077; &#1084;&#1085;&#1077; &#1074; Telegram &#8599;</a>
+          <a id="feedback-link" href="https://t.me/OlgaSheNum" target="_blank" rel="noreferrer">&#1053;&#1072;&#1087;&#1080;&#1096;&#1080;&#1090;&#1077; &#1084;&#1085;&#1077; &#1074; Telegram &#8599;</a>
         </aside>
         <header class="topbar">
           <div>
@@ -56,12 +100,37 @@
 
       <section id="status-message" class="status-message" aria-live="polite">Loading events...</section>
       <section id="events-list" class="events-list" aria-label="Events list"></section>
+
+      <section id="privacy" class="privacy-section" aria-labelledby="privacy-title">
+        <h2 id="privacy-title">Политика конфиденциальности</h2>
+        <p>Сайт использует обязательные технические функции и, только с вашего согласия, Google Analytics 4 для обезличенной статистики посещений и действий на сайте.</p>
+        <p>Мы не передаём в аналитику имена, email, Telegram username или полный текст событий. Рекламное отслеживание отключено. Ваш выбор хранится только в браузере и может быть изменён в любой момент.</p>
+        <p>На сайте также работает Cloudflare Web Analytics. Подробнее об обработке данных можно узнать в <a href="https://www.cloudflare.com/privacypolicy/" target="_blank" rel="noreferrer">политике конфиденциальности Cloudflare</a> и <a href="https://policies.google.com/privacy" target="_blank" rel="noreferrer">политике конфиденциальности Google</a>.</p>
+      </section>
+
+      <footer class="site-footer">
+        <a href="#privacy">Политика конфиденциальности</a>
+        <button id="analytics-settings-button" class="text-button" type="button">Настройки аналитики</button>
+      </footer>
     </main>
     <button id="scroll-top-button" class="scroll-top-button" type="button" aria-label="Наверх" title="Наверх" hidden>↑</button>
 
+    <section id="cookie-banner" class="cookie-banner" aria-labelledby="cookie-title" role="dialog" aria-modal="false" hidden>
+      <div class="cookie-banner__content">
+        <h2 id="cookie-title">Аналитические cookies</h2>
+        <p>Разрешите Google Analytics собирать обезличенную статистику, чтобы мы могли улучшать сайт. Рекламное отслеживание всегда отключено. <a href="#privacy">Подробнее</a></p>
+      </div>
+      <div class="cookie-banner__actions">
+        <button id="analytics-deny-button" class="secondary-button" type="button">Только необходимые</button>
+        <button id="analytics-allow-button" type="button">Разрешить аналитику</button>
+        <button id="analytics-close-button" class="text-button cookie-close-button" type="button" hidden>Закрыть</button>
+      </div>
+    </section>
+
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="./config.js"></script>
-    <script src="./app.js?v=20260905-upcoming"></script>
+    <script src="./analytics.js?v=20260905-ga4"></script>
+    <script src="./app.js?v=20260905-ga4"></script>
     <!-- Cloudflare Web Analytics --><script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token":"bbe957bb195747fda7b26fe5e98c6bc2"}'></script><!-- End Cloudflare Web Analytics -->
   </body>
 </html>
