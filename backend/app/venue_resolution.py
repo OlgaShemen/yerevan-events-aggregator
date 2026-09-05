@@ -47,4 +47,5 @@ def resolve_known_venue(event: dict, raw_text: str | None) -> dict:
         event["venue_name"] = venue.name
     if not event.get("address") and venue.address:
         event["address"] = venue.address
+    event["venue_resolution"] = "trusted_directory"
     return event

@@ -50,6 +50,53 @@ class ReviewReasonTests(unittest.TestCase):
         }
         self.assertEqual(build_review_reasons(event, today=TODAY), ["missing_date"])
 
+    def test_confirmed_evidence_replaces_low_confidence_gate(self):
+        event = {
+            "date_start": "2026-09-10",
+            "time_start": "19:00",
+            "venue_name": "LAN",
+            "confidence_score": 0.6,
+            "evidence_validation": {
+                "version": 1,
+                "date": {"required": True, "confirmed": True},
+                "time": {"required": True, "confirmed": True},
+                "place": {"required": True, "confirmed": True},
+            },
+        }
+        self.assertEqual(build_review_reasons(event, today=TODAY), [])
+
+    def test_reports_unconfirmed_critical_field(self):
+        event = {
+            "date_start": "2026-09-10",
+            "venue_name": "LAN",
+            "confidence_score": 0.95,
+            "evidence_validation": {
+                "version": 1,
+                "date": {"required": True, "confirmed": False},
+                "time": {"required": False, "confirmed": True},
+                "place": {"required": True, "confirmed": True},
+            },
+        }
+        self.assertEqual(build_review_reasons(event, today=TODAY), ["unconfirmed_date"])
+
+    def test_reads_evidence_from_saved_ai_payload(self):
+        event = {
+            "date_start": "2026-09-10",
+            "time_start": "19:00",
+            "venue_name": "LAN",
+            "confidence_score": 0.6,
+            "ai_payload": {
+                "evidence_validation": {
+                    "version": 1,
+                    "date": {"required": True, "confirmed": True},
+                    "time": {"required": True, "confirmed": True},
+                    "place": {"required": True, "confirmed": True},
+                }
+            },
+        }
+
+        self.assertEqual(build_review_reasons(event, today=TODAY), [])
+
 
 if __name__ == "__main__":
     unittest.main()

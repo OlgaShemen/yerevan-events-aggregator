@@ -68,6 +68,15 @@ const REVIEW_REASON_LABELS = {
   missing_place: "Нет места",
   low_confidence: "Низкая уверенность AI",
   possible_duplicate: "Возможный дубль",
+  unconfirmed_date: "Дата не подтверждена",
+  unconfirmed_time: "Время не подтверждено",
+  unconfirmed_place: "Место не подтверждено",
+};
+
+const EVIDENCE_LABELS = {
+  date: "Дата",
+  time: "Время",
+  place: "Место",
 };
 
 const TEXT = {
@@ -217,6 +226,31 @@ function renderReviewReasons(event) {
   `;
 }
 
+function renderEvidence(event) {
+  const validation = event.ai_payload?.evidence_validation;
+  if (validation?.version !== 1) return "";
+
+  const rows = ["date", "time", "place"]
+    .filter((type) => validation[type]?.required)
+    .map((type) => {
+      const result = validation[type];
+      const quotes = result.quotes?.length
+        ? result.quotes.map((quote) => `«${escapeHtml(quote)}»`).join(", ")
+        : "цитата не найдена";
+      const stateClass = result.confirmed ? "is-confirmed" : "is-unconfirmed";
+      const stateText = result.confirmed ? "подтверждено" : "не подтверждено";
+      return `
+        <div class="evidence-row ${stateClass}">
+          <strong>${EVIDENCE_LABELS[type]}: ${stateText}</strong>
+          <span>${quotes}</span>
+        </div>
+      `;
+    })
+    .join("");
+
+  return rows ? `<div class="evidence-panel">${rows}</div>` : "";
+}
+
 function renderReviewEvent(event) {
   return `
     <article class="review-card" data-event-id="${escapeHtml(event.id)}">
@@ -235,6 +269,7 @@ function renderReviewEvent(event) {
       </div>
 
       ${renderReviewReasons(event)}
+      ${renderEvidence(event)}
       ${renderDuplicateWarning(event)}
       ${event.recurring_schedule && event.display_until ? `
         <p class="event-description">${escapeHtml(event.recurring_schedule)}</p>

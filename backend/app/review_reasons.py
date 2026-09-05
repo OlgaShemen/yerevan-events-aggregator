@@ -7,6 +7,9 @@ REVIEW_REASON_LABELS = {
     "missing_place": "Нет места",
     "low_confidence": "Низкая уверенность AI",
     "possible_duplicate": "Возможный дубль",
+    "unconfirmed_date": "Дата не подтверждена",
+    "unconfirmed_time": "Время не подтверждено",
+    "unconfirmed_place": "Место не подтверждено",
 }
 YEREVAN_TIMEZONE = timezone(timedelta(hours=4))
 
@@ -45,7 +48,15 @@ def build_review_reasons(
         reasons.append("missing_date")
     if not (event.get("venue_name") or event.get("address")):
         reasons.append("missing_place")
-    if float(event.get("confidence_score") or 0) < PUBLISH_CONFIDENCE_THRESHOLD:
+    ai_payload = event.get("ai_payload") or {}
+    evidence = event.get("evidence_validation") or ai_payload.get("evidence_validation") or {}
+    has_current_evidence = evidence.get("version") == 1
+    if has_current_evidence:
+        for evidence_type in ("date", "time", "place"):
+            result = evidence.get(evidence_type) or {}
+            if result.get("required") and not result.get("confirmed"):
+                reasons.append(f"unconfirmed_{evidence_type}")
+    elif float(event.get("confidence_score") or 0) < PUBLISH_CONFIDENCE_THRESHOLD:
         reasons.append("low_confidence")
     if has_duplicate_candidate(event, duplicate_candidate):
         reasons.append("possible_duplicate")

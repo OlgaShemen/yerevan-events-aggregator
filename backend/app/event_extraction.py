@@ -41,6 +41,9 @@ EVENT_ITEM_SCHEMA = {
         },
         "price_text": {"type": ["string", "null"]},
         "source_url": {"type": ["string", "null"]},
+        "date_evidence": {"type": "array", "items": {"type": "string"}},
+        "time_evidence": {"type": "array", "items": {"type": "string"}},
+        "venue_evidence": {"type": "array", "items": {"type": "string"}},
         "confidence_score": {"type": "number", "minimum": 0, "maximum": 1},
     },
     "required": [
@@ -57,6 +60,9 @@ EVENT_ITEM_SCHEMA = {
         "language",
         "price_text",
         "source_url",
+        "date_evidence",
+        "time_evidence",
+        "venue_evidence",
         "confidence_score",
     ],
 }
@@ -153,6 +159,12 @@ def extract_event_from_text(
                     "clear date as date_start and the latest clear date as date_end. "
                     "Use null when a field is missing. Dates must use YYYY-MM-DD. "
                     "Times must use HH:MM in 24-hour format. "
+                    "For every extracted event, return exact contiguous quotes from that event's source text in "
+                    "date_evidence, time_evidence, and venue_evidence. Use separate array items when supporting "
+                    "details occur in separate places. Keep an evidence array empty when its corresponding fields "
+                    "are empty. Evidence must be copied verbatim, not paraphrased or translated. A relative date "
+                    "such as 'tomorrow' is valid date evidence, but a weekday belonging to a weekly schedule is not "
+                    "evidence for an invented calendar date. Do not borrow evidence from a sibling event in a digest. "
                     "Do not invent details that are not present in the text."
                 ),
             },

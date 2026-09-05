@@ -390,6 +390,35 @@ button:disabled {
   font-weight: 500;
 }
 
+.evidence-panel {
+  display: grid;
+  gap: 6px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--bg);
+}
+
+.evidence-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.evidence-row.is-confirmed strong {
+  color: #356343;
+}
+
+.evidence-row.is-unconfirmed strong {
+  color: #8b3f34;
+}
+
+.evidence-row span {
+  color: var(--muted);
+}
+
 .secondary-link {
   color: var(--accent-strong);
   font-weight: 700;
