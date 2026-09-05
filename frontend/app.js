@@ -245,10 +245,12 @@ function escapeHtml(value) {
 
 async function loadEvents() {
   elements.status.textContent = "Loading events...";
+  const today = getTodayISO();
 
   const { data, error } = await supabaseClient
     .from("public_events")
     .select("*")
+    .or(`date_start.gte.${today},date_end.gte.${today},display_until.gte.${today}`)
     .order("date_start", { ascending: true });
 
   if (error) {
