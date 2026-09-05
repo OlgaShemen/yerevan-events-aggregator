@@ -28,6 +28,16 @@ class VenueResolutionTests(unittest.TestCase):
         self.assertEqual(resolved["venue_name"], "Ari Standup")
         self.assertEqual(resolved["address"], "ул. Вардананц, 18/1")
 
+    def test_resolves_yerevan_through_engineers_from_source_text(self):
+        event = {"venue_name": None, "address": None}
+        resolved = resolve_known_venue(
+            event,
+            "Экскурсия от проекта «Ереван глазами инженера»",
+        )
+        self.assertEqual(resolved["venue_name"], "Ереван глазами инженера")
+        self.assertEqual(resolved["address"], "Уточните у организатора")
+        self.assertEqual(resolved["venue_resolution"], "trusted_directory")
+
 
 if __name__ == "__main__":
     unittest.main()

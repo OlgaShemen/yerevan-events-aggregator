@@ -26,6 +26,12 @@ KNOWN_VENUES = (
         venue_alias=re.compile(r"(?:бар\w*\s+)?[«\"]?мух[аеуы][»\"]?|\bmuha\b", re.IGNORECASE),
         shared_context=re.compile(r"\bдвиж\s+в\s+мухе\b", re.IGNORECASE),
     ),
+    KnownVenue(
+        name="Ереван глазами инженера",
+        address="Уточните у организатора",
+        venue_alias=re.compile(r"\bереван\s+глазами\s+инженера\b", re.IGNORECASE),
+        shared_context=re.compile(r"\bереван\s+глазами\s+инженера\b", re.IGNORECASE),
+    ),
 )
 
 
