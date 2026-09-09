@@ -123,6 +123,9 @@ def save_event(supabase, raw_item: dict, extracted_event: dict) -> dict:
     if not extracted_event.get("title"):
         raise ValueError("Cannot save event without title.")
 
+    if (raw_item.get("raw_payload") or {}).get("manual_submission"):
+        extracted_event["source_url"] = raw_item.get("source_url")
+
     extracted_event["category"] = normalize_category(
         extracted_event,
         raw_item.get("raw_text"),

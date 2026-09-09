@@ -20,6 +20,7 @@ class Settings:
     telegram_api_hash: str | None = None
     telegram_session_name: str = "yerevan_events"
     telegram_channels: list[str] | None = None
+    telegram_private_channel_ids: list[int] | None = None
     telegram_fetch_limit: int = 20
 
 
@@ -33,6 +34,7 @@ def get_settings() -> Settings:
     telegram_api_hash = os.getenv("TELEGRAM_API_HASH")
     telegram_session_name = os.getenv("TELEGRAM_SESSION_NAME", "yerevan_events")
     telegram_channels_raw = os.getenv("TELEGRAM_CHANNELS", "")
+    telegram_private_channel_ids_raw = os.getenv("TELEGRAM_PRIVATE_CHANNEL_IDS", "")
     telegram_fetch_limit_raw = os.getenv("TELEGRAM_FETCH_LIMIT", "20")
 
     telegram_api_id = int(telegram_api_id_raw) if telegram_api_id_raw else None
@@ -41,7 +43,14 @@ def get_settings() -> Settings:
         for channel in telegram_channels_raw.split(",")
         if channel.strip()
     ]
+    telegram_private_channel_ids = [
+        int(channel_id.strip())
+        for channel_id in telegram_private_channel_ids_raw.split(",")
+        if channel_id.strip()
+    ]
     telegram_fetch_limit = int(telegram_fetch_limit_raw)
+    if any(channel_id <= 0 for channel_id in telegram_private_channel_ids):
+        raise ValueError("TELEGRAM_PRIVATE_CHANNEL_IDS must contain positive channel IDs without the -100 prefix.")
 
     missing = []
     if not supabase_url:
@@ -66,5 +75,6 @@ def get_settings() -> Settings:
         telegram_api_hash=telegram_api_hash,
         telegram_session_name=telegram_session_name,
         telegram_channels=telegram_channels,
+        telegram_private_channel_ids=telegram_private_channel_ids,
         telegram_fetch_limit=telegram_fetch_limit,
     )
