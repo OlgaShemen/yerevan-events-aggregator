@@ -317,6 +317,10 @@ button:disabled {
   font-weight: 500;
 }
 
+.address-tag {
+  line-height: 1.35;
+}
+
 .empty {
   padding: 28px;
   text-align: center;

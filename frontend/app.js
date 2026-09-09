@@ -251,6 +251,7 @@ function renderEventCard(event) {
         <div class="event-meta">
           <span class="tag">${escapeHtml(getCategoryLabel(event.category))}</span>
           ${event.venue_name ? `<span class="tag">${escapeHtml(event.venue_name)}</span>` : ""}
+          ${event.address ? `<span class="tag address-tag">Адрес: ${escapeHtml(event.address)}</span>` : ""}
           ${event.price_text ? `<span class="tag">${escapeHtml(event.price_text)}</span>` : ""}
           ${sourceLink}
         </div>
