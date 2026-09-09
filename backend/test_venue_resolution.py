@@ -65,6 +65,31 @@ class VenueResolutionTests(unittest.TestCase):
         resolved = resolve_known_venue(event, "Лекция пройдёт в пространстве vair-i")
         self.assertIsNone(resolved["venue_name"])
 
+    def test_resolves_yerevan_oak_from_short_name(self):
+        event = {"venue_name": "Ереванский дуб", "address": None}
+        resolved = resolve_known_venue(event, "")
+        self.assertEqual(resolved["venue_name"], "Ереванский дуб")
+        self.assertEqual(
+            resolved["address"],
+            "Проспект Комитаса 36Г, п1, эт 8, кв 26",
+        )
+        self.assertEqual(resolved["venue_resolution"], "trusted_directory")
+
+    def test_resolves_yerevan_oak_from_full_name_in_source(self):
+        event = {"venue_name": None, "address": None}
+        resolved = resolve_known_venue(
+            event,
+            "Встреча в русскоязычной коммуне «Ереванский дуб»",
+        )
+        self.assertEqual(
+            resolved["venue_name"],
+            "Русскоязычная коммуна «Ереванский дуб»",
+        )
+        self.assertEqual(
+            resolved["address"],
+            "Проспект Комитаса 36Г, п1, эт 8, кв 26",
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

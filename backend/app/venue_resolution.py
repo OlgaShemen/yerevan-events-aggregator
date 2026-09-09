@@ -44,6 +44,18 @@ KNOWN_VENUES = (
         venue_alias=re.compile(r"\bvair\.i\b", re.IGNORECASE),
         shared_context=re.compile(r"\bvair\.i\b", re.IGNORECASE),
     ),
+    KnownVenue(
+        name="Русскоязычная коммуна «Ереванский дуб»",
+        address="Проспект Комитаса 36Г, п1, эт 8, кв 26",
+        venue_alias=re.compile(
+            r"(?:русскоязычн\w*\s+коммун\w*\s+)?[«\"]?ереванский\s+дуб[»\"]?",
+            re.IGNORECASE,
+        ),
+        shared_context=re.compile(
+            r"(?:русскоязычн\w*\s+коммун\w*\s+)?[«\"]?ереванский\s+дуб[»\"]?",
+            re.IGNORECASE,
+        ),
+    ),
 )
 
 
