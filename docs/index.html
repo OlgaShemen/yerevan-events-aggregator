@@ -109,6 +109,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="./styles.css?v=20260916-guide" />
+    <link rel="stylesheet" href="./newspaper.css?v=20260916" />
   </head>
   <body>
     <main class="app-shell">
@@ -117,19 +118,31 @@
           <span>&#1057;&#1072;&#1081;&#1090; &#1088;&#1072;&#1073;&#1086;&#1090;&#1072;&#1077;&#1090; &#1074; &#1090;&#1077;&#1089;&#1090;&#1086;&#1074;&#1086;&#1084; &#1088;&#1077;&#1078;&#1080;&#1084;&#1077;. &#1053;&#1072;&#1096;&#1083;&#1080; &#1086;&#1096;&#1080;&#1073;&#1082;&#1091;, &#1093;&#1086;&#1090;&#1080;&#1090;&#1077; &#1087;&#1088;&#1077;&#1076;&#1083;&#1086;&#1078;&#1080;&#1090;&#1100; &#1091;&#1083;&#1091;&#1095;&#1096;&#1077;&#1085;&#1080;&#1077; &#1080;&#1083;&#1080; &#1076;&#1086;&#1073;&#1072;&#1074;&#1080;&#1090;&#1100; &#1089;&#1086;&#1073;&#1099;&#1090;&#1080;&#1077;?</span>
           <a id="feedback-link" href="https://t.me/OlgaSheNum" target="_blank" rel="noreferrer">&#1053;&#1072;&#1087;&#1080;&#1096;&#1080;&#1090;&#1077; &#1084;&#1085;&#1077; &#1074; Telegram &#8599;</a>
         </aside>
+        <div class="masthead">
+          <a class="brand" href="./" aria-label="YVN Radar — главная">
+            <span class="brand-name">YVN Radar<span class="brand-dot" aria-hidden="true"></span></span>
+            <span class="brand-tagline">Ваш радар событий в Ереване</span>
+          </a>
+          <nav class="masthead-nav" aria-label="Навигация по странице">
+            <a href="#events-list">Афиша</a>
+            <a href="https://t.me/OlgaSheNum" target="_blank" rel="noreferrer">Добавить событие ↗</a>
+          </nav>
+        </div>
         <header class="topbar">
           <div>
             <p class="eyebrow">Афиша Еревана</p>
             <h1>Куда сходить в Ереване сегодня и на выходных</h1>
             <p class="intro">Концерты, спектакли, выставки, лекции, кино и встречи — в одной актуальной афише.</p>
           </div>
+
+        </header>
+
+        <div class="filter-bar">
           <div class="summary" aria-live="polite">
             <span id="event-count">0</span>
             <span id="event-count-label">&#1089;&#1086;&#1073;&#1099;&#1090;&#1080;&#1081;</span>
           </div>
-        </header>
-
-        <section class="filters" aria-label="Event filters">
+        <section class="filters" aria-label="Фильтры событий">
           <label>
             <span>&#1044;&#1072;&#1090;&#1072;</span>
             <input id="date-input" type="date" />
@@ -154,6 +167,7 @@
           </label>
           <button id="reset-button" type="button">&#1057;&#1073;&#1088;&#1086;&#1089;&#1080;&#1090;&#1100;</button>
         </section>
+        </div>
       </div>
 
       <nav class="quick-filters" aria-label="Быстрый выбор даты">
@@ -163,8 +177,8 @@
         <button id="share-button" class="share-button" type="button">Поделиться афишей</button>
       </nav>
       <p id="share-status" class="share-status" role="status" aria-live="polite"></p>
-      <section id="status-message" class="status-message" aria-live="polite">Loading events...</section>
-      <section id="events-list" class="events-list" aria-label="Events list"></section>
+      <section id="status-message" class="status-message" aria-live="polite">Загружаем события…</section>
+      <section id="events-list" class="events-list" aria-label="Список событий"></section>
 
 
       <section class="guide-section" aria-labelledby="guide-title">

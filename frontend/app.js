@@ -274,7 +274,7 @@ function escapeHtml(value) {
 }
 
 async function loadEvents() {
-  elements.status.textContent = "Loading events...";
+  elements.status.textContent = "Загружаем события…";
   const today = getTodayISO();
 
   try {
