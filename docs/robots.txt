@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://yerevan-events.ineedbot.net/sitemap.xml

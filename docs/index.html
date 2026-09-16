@@ -3,7 +3,39 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Yerevan Events</title>
+    <title>Афиша Еревана — куда сходить сегодня и на выходных</title>
+    <meta name="description" content="Актуальная афиша Еревана: концерты, спектакли, выставки, лекции, кино и встречи в одном месте." />
+    <link rel="canonical" href="https://yerevan-events.ineedbot.net/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="ru_RU" />
+    <meta property="og:site_name" content="Афиша Еревана" />
+    <meta property="og:title" content="Афиша Еревана — куда сходить сегодня и на выходных" />
+    <meta property="og:description" content="Концерты, спектакли, выставки, лекции, кино и встречи — в одной актуальной афише." />
+    <meta property="og:url" content="https://yerevan-events.ineedbot.net/" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="Афиша Еревана — куда сходить сегодня и на выходных" />
+    <meta name="twitter:description" content="Концерты, спектакли, выставки, лекции, кино и встречи — в одной актуальной афише." />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "WebSite",
+            "@id": "https://yerevan-events.ineedbot.net/#website",
+            "url": "https://yerevan-events.ineedbot.net/",
+            "name": "Афиша Еревана",
+            "description": "Актуальная афиша Еревана: концерты, спектакли, выставки, лекции, кино и встречи в одном месте.",
+            "inLanguage": "ru"
+          },
+          {
+            "@type": "Organization",
+            "@id": "https://yerevan-events.ineedbot.net/#organization",
+            "name": "Афиша Еревана",
+            "url": "https://yerevan-events.ineedbot.net/"
+          }
+        ]
+      }
+    </script>
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag() { dataLayer.push(arguments); }
@@ -62,8 +94,9 @@
         </aside>
         <header class="topbar">
           <div>
-            <p class="eyebrow">Yerevan Events Aggregator</p>
-            <h1>Events in Yerevan</h1>
+            <p class="eyebrow">Афиша Еревана</p>
+            <h1>Куда сходить в Ереване сегодня и на выходных</h1>
+            <p class="intro">Концерты, спектакли, выставки, лекции, кино и встречи — в одной актуальной афише.</p>
           </div>
           <div class="summary" aria-live="polite">
             <span id="event-count">0</span>
@@ -98,7 +131,34 @@
         </section>
       </div>
 
+      <nav class="quick-filters" aria-label="Быстрый выбор даты">
+        <button class="quick-filter" type="button" data-quick-date="today">Сегодня</button>
+        <button class="quick-filter" type="button" data-quick-date="tomorrow">Завтра</button>
+        <button class="quick-filter" type="button" data-quick-date="weekend">На выходных</button>
+        <button id="share-button" class="share-button" type="button">Поделиться афишей</button>
+      </nav>
+      <p id="share-status" class="share-status" role="status" aria-live="polite"></p>
       <section id="status-message" class="status-message" aria-live="polite">Loading events...</section>
+      <section id="today-events" class="featured-events" aria-labelledby="today-events-title" hidden>
+        <div class="section-heading">
+          <div>
+            <p class="section-eyebrow">Ближайшее</p>
+            <h2 id="today-events-title">События в Ереване сегодня</h2>
+          </div>
+          <button class="section-link" type="button" data-quick-date="today">Смотреть все</button>
+        </div>
+        <div id="today-events-list" class="featured-events__list"></div>
+      </section>
+      <section id="weekend-events" class="featured-events" aria-labelledby="weekend-events-title" hidden>
+        <div class="section-heading">
+          <div>
+            <p class="section-eyebrow">План на выходные</p>
+            <h2 id="weekend-events-title">Куда сходить в Ереване на выходных</h2>
+          </div>
+          <button class="section-link" type="button" data-quick-date="weekend">Смотреть все</button>
+        </div>
+        <div id="weekend-events-list" class="featured-events__list"></div>
+      </section>
       <section id="events-list" class="events-list" aria-label="Events list"></section>
 
       <section id="privacy" class="privacy-section" aria-labelledby="privacy-title">

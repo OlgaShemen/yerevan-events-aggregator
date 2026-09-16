@@ -9,6 +9,7 @@ const state = {
   events: [],
   filters: {
     date: "",
+    dateEnd: "",
     category: "",
   },
 };
@@ -21,6 +22,13 @@ const elements = {
   date: document.querySelector("#date-input"),
   category: document.querySelector("#category-input"),
   reset: document.querySelector("#reset-button"),
+  quickFilters: document.querySelector(".quick-filters"),
+  share: document.querySelector("#share-button"),
+  shareStatus: document.querySelector("#share-status"),
+  todaySection: document.querySelector("#today-events"),
+  todayList: document.querySelector("#today-events-list"),
+  weekendSection: document.querySelector("#weekend-events"),
+  weekendList: document.querySelector("#weekend-events-list"),
   scrollTop: document.querySelector("#scroll-top-button"),
 };
 
@@ -90,6 +98,79 @@ function getTodayISO() {
   return `${values.year}-${values.month}-${values.day}`;
 }
 
+function addDays(dateValue, days) {
+  const date = new Date(`${dateValue}T12:00:00+04:00`);
+  date.setDate(date.getDate() + days);
+  return date.toLocaleDateString("en-CA", { timeZone: "Asia/Yerevan" });
+}
+
+function getNextWeekendDate() {
+  const today = getTodayISO();
+  const date = new Date(`${today}T12:00:00+04:00`);
+  const day = date.getDay();
+  const daysUntilSaturday = day === 0 ? 6 : 6 - day;
+  return addDays(today, daysUntilSaturday);
+}
+
+function getQuickFilterDates(value) {
+  if (value === "today") return { date: getTodayISO(), dateEnd: "" };
+  if (value === "tomorrow") return { date: addDays(getTodayISO(), 1), dateEnd: "" };
+  if (value === "weekend") {
+    const saturday = getNextWeekendDate();
+    return { date: saturday, dateEnd: addDays(saturday, 1) };
+  }
+  return { date: "", dateEnd: "" };
+}
+
+function updateQuickFilterState(activeValue = "") {
+  elements.quickFilters?.querySelectorAll(".quick-filter").forEach((button) => {
+    const isActive = button.dataset.quickDate === activeValue;
+    button.classList.toggle("is-active", isActive);
+    button.setAttribute("aria-pressed", String(isActive));
+  });
+}
+
+function getShareUrl() {
+  const url = new URL(window.location.href);
+  url.searchParams.set("utm_source", "share");
+  url.searchParams.set("utm_medium", "organic");
+  url.searchParams.set("utm_campaign", "afisha");
+  return url.toString();
+}
+
+function setShareStatus(message) {
+  elements.shareStatus.textContent = message;
+}
+
+async function shareAfisha() {
+  const shareUrl = getShareUrl();
+  const shareData = {
+    title: "Афиша Еревана",
+    text: "Куда сходить в Ереване сегодня и на выходных",
+    url: shareUrl,
+  };
+
+  try {
+    if (navigator.share) {
+      await navigator.share(shareData);
+      setShareStatus("Афиша отправлена.");
+      trackEvent("afisha_share", { method: "native" });
+      return;
+    }
+
+    await navigator.clipboard.writeText(shareUrl);
+    setShareStatus("Ссылка скопирована.");
+    trackEvent("afisha_share", { method: "copy" });
+  } catch (error) {
+    if (error?.name === "AbortError") return;
+
+    setShareStatus("Не удалось скопировать ссылку.");
+    trackEvent("afisha_share_error", {
+      error_type: error?.name || "unknown",
+    });
+  }
+}
+
 function isRecurringEvent(event) {
   return Boolean(event.recurring_schedule && event.display_until && !event.date_start && !event.date_end);
 }
@@ -128,7 +209,7 @@ function formatTimeRange(event) {
   return formatTime(event.time_start);
 }
 
-function eventIncludesDate(event, selectedDate) {
+function eventIncludesDate(event, selectedDate, selectedDateEnd = "") {
   if (!selectedDate) return true;
   if (isRecurringEvent(event)) return false;
 
@@ -137,11 +218,12 @@ function eventIncludesDate(event, selectedDate) {
 
   if (!startDate && !endDate) return false;
 
-  return selectedDate >= startDate && selectedDate <= endDate;
+  const rangeEnd = selectedDateEnd || selectedDate;
+  return startDate <= rangeEnd && endDate >= selectedDate;
 }
 
 function matchesFilters(event) {
-  if (!eventIncludesDate(event, state.filters.date)) return false;
+  if (!eventIncludesDate(event, state.filters.date, state.filters.dateEnd)) return false;
   if (state.filters.category && event.category !== state.filters.category) return false;
 
   return true;
@@ -196,6 +278,49 @@ function renderEvents() {
   elements.list.innerHTML = filteredEvents.map(renderEventCard).join("");
   requestAnimationFrame(trackScrollDepth);
   return filteredEvents.length;
+}
+
+function renderFeaturedEvent(event) {
+  const venue = event.venue_name || event.address || "Место уточняется";
+  return `
+    <article class="featured-event">
+      <p class="featured-event__date">${escapeHtml(formatDateRange(event))} · ${escapeHtml(formatTimeRange(event))}</p>
+      <h3>${escapeHtml(event.title)}</h3>
+      <p class="featured-event__meta">${escapeHtml(getCategoryLabel(event.category))} · ${escapeHtml(venue)}</p>
+    </article>
+  `;
+}
+
+function renderFeaturedSection(section, list, events) {
+  if (!events.length) {
+    section.hidden = true;
+    list.innerHTML = "";
+    return;
+  }
+
+  section.hidden = false;
+  list.innerHTML = events.slice(0, 6).map(renderFeaturedEvent).join("");
+}
+
+function renderFeaturedEvents() {
+  const publicEvents = state.events
+    .filter(hasRequiredPublicFields)
+    .filter(isUpcomingOrOngoing)
+    .sort(compareEventsByDateTime);
+  const today = getTodayISO();
+  const weekendStart = getNextWeekendDate();
+  const weekendEnd = addDays(weekendStart, 1);
+
+  renderFeaturedSection(
+    elements.todaySection,
+    elements.todayList,
+    publicEvents.filter((event) => eventIncludesDate(event, today))
+  );
+  renderFeaturedSection(
+    elements.weekendSection,
+    elements.weekendList,
+    publicEvents.filter((event) => eventIncludesDate(event, weekendStart, weekendEnd))
+  );
 }
 
 function renderEventCard(event) {
@@ -292,6 +417,7 @@ async function loadEvents() {
     }
 
     state.events = data || [];
+    renderFeaturedEvents();
     renderEvents();
     trackEvent("events_load_success", { events_count: state.events.length });
   } catch (error) {
@@ -304,6 +430,8 @@ async function loadEvents() {
 function bindFilters() {
   elements.date.addEventListener("input", (event) => {
     state.filters.date = event.target.value;
+    state.filters.dateEnd = "";
+    updateQuickFilterState();
     const resultsCount = renderEvents();
     if (state.filters.date) {
       trackEvent("filter_date", {
@@ -327,12 +455,44 @@ function bindFilters() {
   elements.reset.addEventListener("click", () => {
     state.filters = {
       date: "",
+      dateEnd: "",
       category: "",
     };
     elements.date.value = "";
     elements.category.value = "";
+    updateQuickFilterState();
     renderEvents();
     trackEvent("filters_reset");
+  });
+
+  const applyQuickFilter = (button) => {
+    if (!button) return;
+
+    const quickDate = button.dataset.quickDate;
+    const { date: selectedDate, dateEnd } = getQuickFilterDates(quickDate);
+    if (!selectedDate) return;
+
+    state.filters.date = selectedDate;
+    state.filters.dateEnd = dateEnd;
+    elements.date.value = selectedDate;
+    updateQuickFilterState(quickDate);
+    const resultsCount = renderEvents();
+    trackEvent("quick_filter_date", {
+      filter: quickDate,
+      selected_date: selectedDate,
+      selected_date_end: dateEnd || undefined,
+      results_count: resultsCount,
+    });
+  };
+
+  elements.quickFilters?.addEventListener("click", (event) => {
+    applyQuickFilter(event.target.closest(".quick-filter"));
+  });
+
+  [elements.todaySection, elements.weekendSection].forEach((section) => {
+    section?.addEventListener("click", (event) => {
+      applyQuickFilter(event.target.closest(".section-link"));
+    });
   });
 
   elements.list.addEventListener("click", (event) => {
@@ -392,6 +552,10 @@ function bindFilters() {
   });
 }
 
+function bindShare() {
+  elements.share?.addEventListener("click", shareAfisha);
+}
+
 function trackScrollDepth() {
   const documentHeight = document.documentElement.scrollHeight;
   if (!documentHeight) return;
@@ -426,6 +590,7 @@ function bindScrollTopButton() {
 }
 
 bindFilters();
+bindShare();
 bindScrollTopButton();
 bindScrollAnalytics();
 loadEvents();
@@ -436,6 +601,7 @@ function refreshCalendarDay() {
   const today = getTodayISO();
   if (today !== lastRenderedDay) {
     lastRenderedDay = today;
+    renderFeaturedEvents();
     renderEvents();
   }
 }
