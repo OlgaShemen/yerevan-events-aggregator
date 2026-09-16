@@ -25,10 +25,6 @@ const elements = {
   quickFilters: document.querySelector(".quick-filters"),
   share: document.querySelector("#share-button"),
   shareStatus: document.querySelector("#share-status"),
-  todaySection: document.querySelector("#today-events"),
-  todayList: document.querySelector("#today-events-list"),
-  weekendSection: document.querySelector("#weekend-events"),
-  weekendList: document.querySelector("#weekend-events-list"),
   scrollTop: document.querySelector("#scroll-top-button"),
 };
 
@@ -258,8 +254,6 @@ function getEventCountLabel(count) {
 }
 
 function renderEvents() {
-  renderFeaturedEvents();
-
   const filteredEvents = state.events
     .filter(hasRequiredPublicFields)
     .filter(isUpcomingOrOngoing)
@@ -281,55 +275,6 @@ function renderEvents() {
   focusSharedEvent();
   requestAnimationFrame(trackScrollDepth);
   return filteredEvents.length;
-}
-
-function renderFeaturedEvent(event) {
-  const venue = event.venue_name || event.address || "Место уточняется";
-  return `
-    <article class="featured-event">
-      <p class="featured-event__date">${escapeHtml(formatDateRange(event))} · ${escapeHtml(formatTimeRange(event))}</p>
-      <h3>${escapeHtml(event.title)}</h3>
-      <p class="featured-event__meta">${escapeHtml(getCategoryLabel(event.category))} · ${escapeHtml(venue)}</p>
-    </article>
-  `;
-}
-
-function renderFeaturedSection(section, list, events) {
-  if (!events.length) {
-    section.hidden = true;
-    list.innerHTML = "";
-    return;
-  }
-
-  section.hidden = false;
-  list.innerHTML = events.slice(0, 3).map(renderFeaturedEvent).join("");
-}
-
-function renderFeaturedEvents() {
-  if (state.filters.date || state.filters.category) {
-    renderFeaturedSection(elements.todaySection, elements.todayList, []);
-    renderFeaturedSection(elements.weekendSection, elements.weekendList, []);
-    return;
-  }
-
-  const publicEvents = state.events
-    .filter(hasRequiredPublicFields)
-    .filter(isUpcomingOrOngoing)
-    .sort(compareEventsByDateTime);
-  const today = getTodayISO();
-  const weekendStart = getNextWeekendDate();
-  const weekendEnd = addDays(weekendStart, 1);
-
-  renderFeaturedSection(
-    elements.todaySection,
-    elements.todayList,
-    publicEvents.filter((event) => eventIncludesDate(event, today))
-  );
-  renderFeaturedSection(
-    elements.weekendSection,
-    elements.weekendList,
-    publicEvents.filter((event) => eventIncludesDate(event, weekendStart, weekendEnd))
-  );
 }
 
 function renderEventCard(event) {
@@ -556,11 +501,6 @@ function bindFilters() {
     applyQuickFilter(event.target.closest(".quick-filter"));
   });
 
-  [elements.todaySection, elements.weekendSection].forEach((section) => {
-    section?.addEventListener("click", (event) => {
-      applyQuickFilter(event.target.closest(".section-link"));
-    });
-  });
 
   elements.list.addEventListener("click", (event) => {
     const sourceLink = event.target.closest(".source-tag");
