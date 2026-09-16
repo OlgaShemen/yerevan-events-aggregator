@@ -418,7 +418,8 @@ async function shareEvent(card) {
   const button = card.querySelector(".event-share-button");
 
   try {
-    if (navigator.share) {
+    const isMobile = window.matchMedia("(pointer: coarse)").matches || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    if (isMobile && navigator.share) {
       await navigator.share({ title, text: shareText, url: shareUrl });
       trackEvent("event_share", { method: "native", event_title: title.slice(0, 100) });
       return;
