@@ -5,13 +5,11 @@ CATEGORY_KEYWORDS = [
     (
         "kids",
         [
-            "\u0434\u0435\u0442\u0438",
             "\u0434\u0435\u0442\u044f\u043c",
             "\u0434\u0435\u0442\u0441\u043a\u0438\u0439",
             "\u0434\u0435\u0442\u0441\u043a\u0430\u044f",
             "\u0434\u043b\u044f \u0434\u0435\u0442\u0435\u0439",
             "\u043c\u0430\u043b\u044b\u0448",
-            "kids",
         ],
     ),
     (
@@ -21,11 +19,14 @@ CATEGORY_KEYWORDS = [
             "\u044d\u043a\u0441\u043a\u0443\u0440\u0441\u0438\u043e\u043d",
             "\u0445\u0430\u0439\u043a\u0438\u043d\u0433",
             "\u043f\u043e\u0445\u043e\u0434",
-            "\u0442\u0443\u0440 ",
+            "\u0442\u0443\u0440 \u043f\u043e ",
+            "\u0441\u0430\u043f-\u0442\u0443\u0440",
+            "sup-\u0442\u0443\u0440",
             "\u0442\u0443\u0440\u0438\u0437\u043c",
             "\u0438\u043c\u043c\u0435\u0440\u0441\u0438\u0432\u043d\u044b\u0439 \u0430\u0443\u0434\u0438\u043e\u0441\u043f\u0435\u043a\u0442\u0430\u043a\u043b\u044c",
             "hiking",
-            "tour",
+            "walking tour",
+            "guided tour",
         ],
     ),
     (
@@ -140,5 +141,13 @@ def normalize_category(event: dict, raw_text: str | None = None) -> str:
     for category, keywords in CATEGORY_KEYWORDS:
         if any(keyword_matches(text, keyword) for keyword in keywords):
             return category
+
+    venue = (event.get("venue_name") or "").lower()
+    if "ari standup" in venue or "ari stand-up" in venue:
+        return "party"
+
+    description = (event.get("description") or "").lower()
+    if any(word in description for word in ("\u043a\u043e\u043d\u0446\u0435\u0440\u0442", "concert")):
+        return "concert"
 
     return event.get("category") or "other"
