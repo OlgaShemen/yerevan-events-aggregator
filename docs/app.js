@@ -258,6 +258,8 @@ function getEventCountLabel(count) {
 }
 
 function renderEvents() {
+  renderFeaturedEvents();
+
   const filteredEvents = state.events
     .filter(hasRequiredPublicFields)
     .filter(isUpcomingOrOngoing)
@@ -299,10 +301,16 @@ function renderFeaturedSection(section, list, events) {
   }
 
   section.hidden = false;
-  list.innerHTML = events.slice(0, 6).map(renderFeaturedEvent).join("");
+  list.innerHTML = events.slice(0, 3).map(renderFeaturedEvent).join("");
 }
 
 function renderFeaturedEvents() {
+  if (state.filters.date || state.filters.category) {
+    renderFeaturedSection(elements.todaySection, elements.todayList, []);
+    renderFeaturedSection(elements.weekendSection, elements.weekendList, []);
+    return;
+  }
+
   const publicEvents = state.events
     .filter(hasRequiredPublicFields)
     .filter(isUpcomingOrOngoing)
@@ -417,7 +425,6 @@ async function loadEvents() {
     }
 
     state.events = data || [];
-    renderFeaturedEvents();
     renderEvents();
     trackEvent("events_load_success", { events_count: state.events.length });
   } catch (error) {
@@ -601,7 +608,6 @@ function refreshCalendarDay() {
   const today = getTodayISO();
   if (today !== lastRenderedDay) {
     lastRenderedDay = today;
-    renderFeaturedEvents();
     renderEvents();
   }
 }
