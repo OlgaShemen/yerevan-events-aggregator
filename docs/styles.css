@@ -343,6 +343,11 @@ button:disabled {
   border-color: #aaaaaa;
 }
 
+.event-card.is-shared-event {
+  border-color: var(--accent-strong);
+  box-shadow: 0 0 0 3px rgba(82, 108, 168, 0.16);
+}
+
 .event-date {
   color: #3a5f9a;
   font-size: 13px;
@@ -423,6 +428,22 @@ button:disabled {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+}
+
+.event-share-button {
+  min-height: 30px;
+  margin-top: 12px;
+  padding: 0;
+  background: transparent;
+  color: var(--accent-strong);
+  font-size: 14px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.event-share-button:hover {
+  background: transparent;
+  color: var(--accent);
 }
 
 .tag {

@@ -278,6 +278,7 @@ function renderEvents() {
 
   elements.status.textContent = "";
   elements.list.innerHTML = filteredEvents.map(renderEventCard).join("");
+  focusSharedEvent();
   requestAnimationFrame(trackScrollDepth);
   return filteredEvents.length;
 }
@@ -347,9 +348,12 @@ function renderEventCard(event) {
   const sourceLink = event.source_url
     ? `<a class="tag source-tag" href="${escapeHtml(event.source_url)}" target="_blank" rel="noreferrer">\u2197 \u0418\u0441\u0442\u043e\u0447\u043d\u0438\u043a</a>`
     : "";
+  const eventId = event.id ? String(event.id) : "";
+  const shareUrl = getEventShareUrl(eventId);
+  const shareText = getEventShareText(event, shareUrl);
 
   return `
-    <article class="event-card" data-event-title="${escapeHtml(event.title)}" data-category="${escapeHtml(event.category || "other")}">
+    <article class="event-card" data-event-id="${escapeHtml(eventId)}" data-event-title="${escapeHtml(event.title)}" data-category="${escapeHtml(event.category || "other")}" data-share-text="${escapeHtml(shareText)}" data-share-url="${escapeHtml(shareUrl)}">
       <div>
         <div class="event-date">${formatDateRange(event)}</div>
         <div class="event-time">${formatTimeRange(event)}</div>
@@ -388,9 +392,64 @@ function renderEventCard(event) {
           ${event.price_text ? `<span class="tag">${escapeHtml(event.price_text)}</span>` : ""}
           ${sourceLink}
         </div>
+        ${eventId ? `<button class="event-share-button" type="button">Поделиться</button>` : ""}
       </div>
     </article>
   `;
+}
+
+function getEventShareUrl(eventId) {
+  const url = new URL(window.location.origin + window.location.pathname);
+  url.searchParams.set("event", eventId);
+  url.searchParams.set("utm_source", "event_share");
+  url.searchParams.set("utm_medium", "organic");
+  return url.toString();
+}
+
+function getEventShareText(event, shareUrl) {
+  const venue = event.venue_name || event.address || "Место уточняется";
+  return `${event.title}\n${formatDateRange(event)} · ${formatTimeRange(event)}\n${venue}\n\nПодробнее: ${shareUrl}`;
+}
+
+async function shareEvent(card) {
+  const title = card.dataset.eventTitle;
+  const shareText = card.dataset.shareText;
+  const shareUrl = card.dataset.shareUrl;
+  const button = card.querySelector(".event-share-button");
+
+  try {
+    if (navigator.share) {
+      await navigator.share({ title, text: shareText, url: shareUrl });
+      trackEvent("event_share", { method: "native", event_title: title.slice(0, 100) });
+      return;
+    }
+
+    await navigator.clipboard.writeText(shareText);
+    button.textContent = "Скопировано";
+    trackEvent("event_share", { method: "copy", event_title: title.slice(0, 100) });
+    window.setTimeout(() => { button.textContent = "Поделиться"; }, 2000);
+  } catch (error) {
+    if (error?.name === "AbortError") return;
+    button.textContent = "Не удалось скопировать";
+    trackEvent("event_share_error", {
+      error_type: error?.name || "unknown",
+      event_title: title.slice(0, 100),
+    });
+    window.setTimeout(() => { button.textContent = "Поделиться"; }, 2500);
+  }
+}
+
+function focusSharedEvent() {
+  const sharedEventId = new URLSearchParams(window.location.search).get("event");
+  if (!sharedEventId) return;
+
+  const card = [...elements.list.querySelectorAll(".event-card")]
+    .find((eventCard) => eventCard.dataset.eventId === sharedEventId);
+  if (!card) return;
+
+  card.classList.add("is-shared-event");
+  card.scrollIntoView({ behavior: "smooth", block: "center" });
+  window.setTimeout(() => card.classList.remove("is-shared-event"), 4000);
 }
 
 function getCategoryLabel(category) {
@@ -511,6 +570,11 @@ function bindFilters() {
         category: card.dataset.category,
         source_url: getAnalyticsSourceUrl(sourceLink.href),
       });
+      return;
+    }
+
+    if (event.target.classList.contains("event-share-button")) {
+      shareEvent(event.target.closest(".event-card"));
       return;
     }
 
